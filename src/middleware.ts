@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 const adminPaths = ["/admin"];
 const authPaths = ["/account", "/checkout", "/order-confirmation"];
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAdminPath = adminPaths.some((p) => pathname.startsWith(p));
@@ -13,21 +11,15 @@ export async function middleware(request: NextRequest) {
 
   if (!isAdminPath && !isAuthPath) return NextResponse.next();
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  // Check for a session cookie — full validation happens in server components
+  const sessionCookie =
+    request.cookies.get("better-auth.session_token") ??
+    request.cookies.get("__Secure-better-auth.session_token");
 
-  if (!session) {
+  if (!sessionCookie) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAdminPath) {
-    const userRole = (session.user as { role?: string }).role ?? "";
-    if (!["SUPER_ADMIN", "SHOP_ADMIN", "STAFF"].includes(userRole)) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
   }
 
   return NextResponse.next();
