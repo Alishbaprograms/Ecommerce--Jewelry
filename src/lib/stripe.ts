@@ -7,7 +7,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function createPaymentIntent(
   amount: number,
-  currency = "usd",
+  currency = "pkr",
   metadata: Record<string, string> = {}
 ) {
   return stripe.paymentIntents.create({

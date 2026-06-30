@@ -20,10 +20,10 @@ const sortOptions = [
 
 const filterOptions = {
   price: [
-    { label: "Under $200", min: 0, max: 200 },
-    { label: "$200 – $500", min: 200, max: 500 },
-    { label: "$500 – $1,000", min: 500, max: 1000 },
-    { label: "Over $1,000", min: 1000, max: 99999 },
+    { label: "Under Rs. 50,000", min: 0, max: 50000 },
+    { label: "Rs. 50,000 – 150,000", min: 50000, max: 150000 },
+    { label: "Rs. 150,000 – 300,000", min: 150000, max: 300000 },
+    { label: "Over Rs. 300,000", min: 300000, max: 99999999 },
   ],
   material: ["Gold", "Silver", "Rose Gold", "Platinum", "Mixed Metal"],
   stone: ["Diamond", "Pearl", "Emerald", "Sapphire", "Ruby", "No Stone"],

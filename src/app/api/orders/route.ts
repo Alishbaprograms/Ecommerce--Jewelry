@@ -124,11 +124,11 @@ export async function POST(request: NextRequest) {
       await sendOrderConfirmation(data.shipping.email, {
         orderNumber,
         customerName: `${data.shipping.firstName} ${data.shipping.lastName}`,
-        total: `$${total.toFixed(2)}`,
+        total: `Rs. ${Math.round(total).toLocaleString("en-PK")}`,
         items: data.items.map((i) => ({
           name: i.name,
           quantity: i.quantity,
-          price: `$${(i.price * i.quantity).toFixed(2)}`,
+          price: `Rs. ${Math.round(i.price * i.quantity).toLocaleString("en-PK")}`,
         })),
       });
     } catch {

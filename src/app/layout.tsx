@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s | Zohraé",
   },
   description:
-    "Discover handcrafted fine jewelry. Rings, necklaces, earrings, and bracelets designed for the modern woman. Free shipping on orders over $150.",
+    "Discover handcrafted fine jewelry. Rings, necklaces, earrings, and bracelets designed for the modern woman. Free shipping on orders over Rs. 50,000.",
   keywords: [
     "jewelry",
     "fine jewelry",

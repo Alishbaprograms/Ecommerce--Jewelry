@@ -460,7 +460,7 @@ export function ProductPageClient({ product }: Props) {
             {/* Trust signals */}
             <div className="grid grid-cols-3 gap-4 py-6 border-t border-border">
               {[
-                { Icon: Truck, label: "Free Shipping", sub: "On orders over $150" },
+                { Icon: Truck, label: "Free Shipping", sub: "On orders over Rs. 50,000" },
                 { Icon: Shield, label: "Certified", sub: "Ethically sourced" },
                 { Icon: RotateCcw, label: "30 Day Returns", sub: "Hassle free" },
               ].map(({ Icon, label, sub }) => (
@@ -517,7 +517,7 @@ export function ProductPageClient({ product }: Props) {
                           )}
                           {item.id === "shipping" && (
                             <>
-                              <p>Free standard shipping on orders over $150.</p>
+                              <p>Free standard shipping on orders over Rs. 50,000.</p>
                               <p>Express shipping available at checkout.</p>
                               <p>We accept returns within 30 days of delivery for unworn items in original condition.</p>
                             </>

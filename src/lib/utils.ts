@@ -7,12 +7,13 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatPrice(
   price: number | string,
-  currency = "USD",
-  locale = "en-US"
+  currency = "PKR",
+  locale = "en-PK"
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    maximumFractionDigits: 0,
   }).format(Number(price));
 }
 

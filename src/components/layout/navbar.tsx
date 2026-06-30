@@ -80,7 +80,7 @@ export function Navbar() {
             isTransparent ? "bg-black/20 text-white/90" : "bg-foreground text-background"
           )}
         >
-          FREE SHIPPING ON ORDERS OVER $150 · USE CODE <span className="font-semibold">LUMIERE20</span> FOR 20% OFF
+          FREE SHIPPING ON ORDERS OVER RS. 50,000 · USE CODE <span className="font-semibold">ZOHRAE20</span> FOR 20% OFF
         </div>
 
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
