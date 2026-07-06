@@ -42,9 +42,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const primaryImage = product.images.find((i) => i.isPrimary) ?? product.images[0];
   const secondaryImage = product.images[1];
 
-  const discount = product.compareAtPrice
-    ? getDiscountPercentage(product.compareAtPrice, product.basePrice)
-    : 0;
+  const basePrice = parseFloat(String(product.basePrice));
+  const compareAtPrice = product.compareAtPrice ? parseFloat(String(product.compareAtPrice)) : null;
+  const discount = compareAtPrice ? getDiscountPercentage(compareAtPrice, basePrice) : 0;
 
   const defaultVariant = product.variants?.[0];
 
@@ -55,19 +55,20 @@ export function ProductCard({ product, className }: ProductCardProps) {
       return;
     }
     setAddingToCart(true);
+    const price = parseFloat(String(defaultVariant.price));
     addItem({
       id: defaultVariant.id,
       productId: product.id,
       variantId: defaultVariant.id,
       name: product.name,
       variantName: "Default",
-      price: defaultVariant.price,
+      price,
       image: primaryImage?.url ?? "",
       stock: defaultVariant.stock,
       sku: defaultVariant.sku,
     });
     toast.success(`${product.name} added to bag`, {
-      description: formatPrice(defaultVariant.price),
+      description: formatPrice(price),
     });
     setTimeout(() => setAddingToCart(false), 600);
   }
@@ -77,7 +78,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     toggleItem({
       productId: product.id,
       name: product.name,
-      price: product.basePrice,
+      price: basePrice,
       image: primaryImage?.url ?? "",
       slug: product.slug,
     });
@@ -205,10 +206,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{formatPrice(product.basePrice)}</span>
-          {product.compareAtPrice && (
+          <span className="text-sm font-medium">{formatPrice(basePrice)}</span>
+          {compareAtPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(product.compareAtPrice)}
+              {formatPrice(compareAtPrice)}
             </span>
           )}
         </div>

@@ -32,9 +32,9 @@ const checkoutSchema = z.object({
 type CheckoutData = z.infer<typeof checkoutSchema>;
 
 const shippingMethods = [
-  { id: "standard", name: "Standard Shipping", description: "5-7 business days", price: 12 },
-  { id: "express", name: "Express Shipping", description: "2-3 business days", price: 25 },
-  { id: "overnight", name: "Overnight Shipping", description: "Next business day", price: 45 },
+  { id: "standard", name: "Standard Shipping", description: "5-7 business days", price: 250 },
+  { id: "express", name: "Express Shipping", description: "2-3 business days", price: 500 },
+  { id: "overnight", name: "Overnight Shipping", description: "Next business day", price: 900 },
 ];
 
 export default function CheckoutPage() {
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
     defaultValues: { country: "US" },
   });
 
-  const shippingCost = subtotal >= 150 ? 0 : selectedShipping.price;
+  const shippingCost = subtotal >= 50000 ? 0 : selectedShipping.price;
   const giftWrapCost = giftWrap ? 6 : 0;
   const taxAmount = (subtotal - couponDiscount) * 0.08;
   const total = subtotal - couponDiscount + shippingCost + giftWrapCost + taxAmount;
@@ -256,7 +256,7 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                           <span className="text-sm font-medium">
-                            {subtotal >= 150 && method.id === "standard" ? "FREE" : formatPrice(method.price)}
+                            {subtotal >= 50000 && method.id === "standard" ? "FREE" : formatPrice(method.price)}
                           </span>
                         </label>
                       ))}
