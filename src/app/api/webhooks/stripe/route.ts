@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import Stripe from "stripe";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
 
-  if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: "Missing signature or secret" }, { status: 400 });
+  if (!sig || !process.env.STRIPE_WEBHOOK_SECRET || !process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: "Missing configuration" }, { status: 400 });
   }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2026-06-24.dahlia" });
 
   let event: Stripe.Event;
   try {
@@ -26,11 +29,7 @@ export async function POST(req: NextRequest) {
 
       await db.order.updateMany({
         where: { orderNumber },
-        data: {
-          paymentStatus: "PAID",
-          paymentIntentId: pi.id,
-          status: "CONFIRMED",
-        },
+        data: { paymentStatus: "PAID", paymentIntentId: pi.id, status: "CONFIRMED" },
       });
 
       const order = await db.order.findFirst({ where: { orderNumber } });
