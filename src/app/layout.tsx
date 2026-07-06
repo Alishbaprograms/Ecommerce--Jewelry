@@ -64,10 +64,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <Providers>
-          <Navbar />
-          <CartDrawer />
-          <main>{children}</main>
-          <Footer />
+          {children}
           <Toaster
             position="top-right"
             toastOptions={{
