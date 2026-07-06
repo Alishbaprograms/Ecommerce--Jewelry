@@ -18,6 +18,22 @@ export const auth = betterAuth({
       maxAge: 5 * 60,
     },
   },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+            .split(",")
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean);
+          const role = adminEmails.includes(user.email.toLowerCase())
+            ? "SUPER_ADMIN"
+            : "CUSTOMER";
+          return { data: { ...user, role } };
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       role: {
