@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export interface CartItem {
   id: string;
   productId: string;
+  slug: string;
   variantId: string;
   name: string;
   variantName: string;
@@ -113,6 +114,9 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "zohrae-cart",
+      version: 2,
+      // v1 carts had no product slug; drop them rather than show broken links.
+      migrate: () => ({ items: [] }) as never,
     }
   )
 );

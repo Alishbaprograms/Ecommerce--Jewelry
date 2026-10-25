@@ -1,146 +1,150 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
+import { calcShipping } from "@/lib/shop-config";
 import { sendOrderConfirmation } from "@/lib/email";
-import { headers } from "next/headers";
 
 const orderSchema = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    variantId: z.string(),
-    quantity: z.number().int().positive(),
-    name: z.string(),
-    variantName: z.string(),
-    price: z.number(),
-    sku: z.string(),
-    image: z.string().optional(),
-    engravingText: z.string().optional(),
-  })),
-  shipping: z.object({
-    email: z.string().email(),
-    firstName: z.string(),
-    lastName: z.string(),
-    phone: z.string().optional(),
-    address: z.string(),
-    city: z.string(),
-    state: z.string(),
-    postalCode: z.string(),
-    country: z.string(),
-    notes: z.string().optional(),
+  items: z
+    .array(z.object({ variantId: z.string(), quantity: z.number().int().positive().max(50) }))
+    .min(1, "Your cart is empty"),
+  customer: z.object({
+    name: z.string().trim().min(2, "Please enter your name"),
+    phone: z.string().trim().min(7, "Please enter a phone number we can reach you on"),
+    email: z.string().trim().email().optional().or(z.literal("")),
+    address: z.string().trim().min(5, "Please enter your full address"),
+    city: z.string().trim().min(2, "Please enter your city"),
+    postalCode: z.string().trim().optional(),
+    notes: z.string().trim().max(500).optional(),
   }),
-  shippingMethod: z.string(),
-  couponCode: z.string().optional().nullable(),
-  giftWrap: z.boolean().default(false),
-  giftMessage: z.string().optional(),
 });
 
+class OrderError extends Error {}
+
+// Guest checkout: no account needed. Prices and stock always come from the database, never from the browser.
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
-
   try {
-    const body = await request.json();
-    const data = orderSchema.parse(body);
+    const data = orderSchema.parse(await request.json());
 
-    const shippingCosts: Record<string, number> = {
-      standard: 12,
-      express: 25,
-      overnight: 45,
-    };
+    // If the shopper happens to be signed in, link the order to their account. Otherwise it's a guest order.
+    const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
 
-    const subtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const shippingCost = subtotal >= 150 ? 0 : (shippingCosts[data.shippingMethod] ?? 12);
-    const giftWrapCost = data.giftWrap ? 6 : 0;
-    const taxAmount = subtotal * 0.08;
-    const total = subtotal + shippingCost + giftWrapCost + taxAmount;
-
-    const address = await db.address.create({
-      data: {
-        userId: session.user.id,
-        firstName: data.shipping.firstName,
-        lastName: data.shipping.lastName,
-        phone: data.shipping.phone,
-        line1: data.shipping.address,
-        city: data.shipping.city,
-        state: data.shipping.state,
-        postalCode: data.shipping.postalCode,
-        country: data.shipping.country,
+    const variants = await db.productVariant.findMany({
+      where: { id: { in: data.items.map((i) => i.variantId) }, isActive: true, deletedAt: null },
+      include: {
+        product: {
+          select: { id: true, name: true, status: true, deletedAt: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+        },
       },
     });
 
+    const lines = data.items.map((item) => {
+      const v = variants.find((x) => x.id === item.variantId);
+      if (!v || v.product.status !== "ACTIVE" || v.product.deletedAt) {
+        throw new OrderError("An item in your cart is no longer available. Please remove it and try again.");
+      }
+      if (v.stock < item.quantity) {
+        throw new OrderError(`Sorry, only ${v.stock} of "${v.product.name}" left in stock.`);
+      }
+      const unitPrice = Number(v.price);
+      return { v, quantity: item.quantity, unitPrice };
+    });
+
+    const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
+    const shippingCost = calcShipping(subtotal);
+    const total = subtotal + shippingCost;
     const orderNumber = generateOrderNumber();
+    const c = data.customer;
+    const [firstName, ...rest] = c.name.split(/\s+/);
 
-    const order = await db.order.create({
-      data: {
-        orderNumber,
-        userId: session.user.id,
-        status: "PENDING",
-        paymentStatus: "PENDING",
-        shippingAddressId: address.id,
-        subtotal,
-        shippingCost,
-        taxAmount,
-        total,
-        giftWrap: data.giftWrap,
-        giftMessage: data.giftMessage,
-        customerNotes: data.shipping.notes,
-        shippingProvider: data.shippingMethod,
-        items: {
-          create: data.items.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            productName: item.name,
-            variantName: item.variantName,
-            sku: item.sku,
-            quantity: item.quantity,
-            unitPrice: item.price,
-            totalPrice: item.price * item.quantity,
-            engravingText: item.engravingText,
-            imageUrl: item.image,
-          })),
+    const order = await db.$transaction(async (tx) => {
+      // Reserve stock first; the conditional update stops two shoppers buying the last item.
+      for (const l of lines) {
+        const res = await tx.productVariant.updateMany({
+          where: { id: l.v.id, stock: { gte: l.quantity } },
+          data: { stock: { decrement: l.quantity } },
+        });
+        if (res.count === 0) throw new OrderError(`Sorry, "${l.v.product.name}" just sold out.`);
+      }
+
+      const address = await tx.address.create({
+        data: {
+          userId: session?.user.id ?? null,
+          firstName,
+          lastName: rest.join(" ") || "-",
+          phone: c.phone,
+          line1: c.address,
+          city: c.city,
+          state: c.city,
+          postalCode: c.postalCode || "-",
+          country: "Pakistan",
         },
-        statusHistory: {
-          create: { status: "PENDING" },
+      });
+
+      return tx.order.create({
+        data: {
+          orderNumber,
+          userId: session?.user.id ?? null,
+          guestName: c.name,
+          guestPhone: c.phone,
+          guestEmail: c.email || null,
+          status: "PENDING",
+          paymentStatus: "PENDING",
+          paymentMethod: "COD",
+          currency: "PKR",
+          shippingAddressId: address.id,
+          subtotal,
+          shippingCost,
+          taxAmount: 0,
+          total,
+          customerNotes: c.notes || null,
+          items: {
+            create: lines.map((l) => ({
+              productId: l.v.product.id,
+              variantId: l.v.id,
+              productName: l.v.product.name,
+              variantName: l.v.name,
+              sku: l.v.sku,
+              quantity: l.quantity,
+              unitPrice: l.unitPrice,
+              totalPrice: l.unitPrice * l.quantity,
+              imageUrl: l.v.product.images[0]?.url ?? null,
+            })),
+          },
+          statusHistory: { create: { status: "PENDING" } },
         },
-      },
+      });
     });
 
-    // Deduct stock
-    await Promise.all(
-      data.items.map((item) =>
-        db.productVariant.update({
-          where: { id: item.variantId },
-          data: { stock: { decrement: item.quantity } },
-        })
-      )
-    );
-
-    // Send confirmation email
-    try {
-      await sendOrderConfirmation(data.shipping.email, {
-        orderNumber,
-        customerName: `${data.shipping.firstName} ${data.shipping.lastName}`,
-        total: `Rs. ${Math.round(total).toLocaleString("en-PK")}`,
-        items: data.items.map((i) => ({
-          name: i.name,
-          quantity: i.quantity,
-          price: `Rs. ${Math.round(i.price * i.quantity).toLocaleString("en-PK")}`,
-        })),
-      });
-    } catch {
-      // Email failure should not block order creation
+    if (c.email) {
+      try {
+        await sendOrderConfirmation(c.email, {
+          orderNumber,
+          customerName: c.name,
+          total: `Rs. ${Math.round(total).toLocaleString("en-PK")}`,
+          items: lines.map((l) => ({
+            name: l.v.product.name,
+            quantity: l.quantity,
+            price: `Rs. ${Math.round(l.unitPrice * l.quantity).toLocaleString("en-PK")}`,
+          })),
+        });
+      } catch {
+        // An email problem must never block an order that is already saved.
+      }
     }
 
-    return NextResponse.json({ orderNumber, orderId: order.id }, { status: 201 });
+    return NextResponse.json({ orderNumber, orderId: order.id, total }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues[0]?.message ?? "Please check your details" }, { status: 400 });
+    }
+    if (error instanceof OrderError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     console.error("[POST /api/orders]", error);
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong placing your order. Please try again." }, { status: 500 });
   }
 }

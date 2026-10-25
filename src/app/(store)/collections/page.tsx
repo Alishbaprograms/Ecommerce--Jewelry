@@ -32,9 +32,9 @@ export default async function CollectionsPage() {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <p className="text-xs tracking-widest uppercase text-muted-foreground mb-3">Explore</p>
-          <h1 className="font-serif text-4xl sm:text-5xl font-light">Our Collections</h1>
+          <h1 className="font-serif text-4xl sm:text-5xl font-light">Shop by category</h1>
           <p className="text-muted-foreground mt-4 max-w-md mx-auto">
-            Handcrafted fine jewelry for every occasion and every story.
+            Magnetic earrings, bead bracelets, necklaces and more for little ones.
           </p>
         </div>
 

@@ -8,34 +8,21 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Users,
-  BarChart3,
   Tag,
-  Star,
-  FileText,
-  Settings,
   Archive,
   ChevronLeft,
   ChevronRight,
-  Bell,
-  Search,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/admin" },
-  { label: "Products", icon: Package, href: "/admin/products" },
   { label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
-  { label: "Customers", icon: Users, href: "/admin/customers" },
+  { label: "Products", icon: Package, href: "/admin/products" },
+  { label: "Categories", icon: Tag, href: "/admin/categories" },
   { label: "Inventory", icon: Archive, href: "/admin/inventory" },
-  { label: "Marketing", icon: Tag, href: "/admin/marketing" },
-  { label: "Reviews", icon: Star, href: "/admin/reviews" },
-  { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
-  { label: "Content", icon: FileText, href: "/admin/content" },
-  { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
 export function AdminSidebar() {
@@ -44,8 +31,8 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   async function handleSignOut() {
-    await signOut();
-    router.push("/");
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin/login");
   }
 
   return (
@@ -69,7 +56,7 @@ export function AdminSidebar() {
           )}
         </AnimatePresence>
         {collapsed && (
-          <span className="font-serif text-lg font-light mx-auto">L</span>
+          <span className="font-serif text-lg font-light mx-auto">Z</span>
         )}
       </div>
 

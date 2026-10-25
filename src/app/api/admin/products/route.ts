@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-auth";
 import { z } from "zod";
+import { productInputSchema, newSku } from "@/lib/product-schema";
 import { slugify } from "@/lib/utils";
-import { headers } from "next/headers";
-
-async function requireAdmin() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !["SUPER_ADMIN", "SHOP_ADMIN", "STAFF"].includes((session.user as { role?: string }).role ?? "")) {
-    return null;
-  }
-  return session;
-}
 
 export async function GET(request: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") ?? "";
@@ -55,58 +46,55 @@ export async function GET(request: NextRequest) {
   });
 }
 
-const productSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  shortDescription: z.string().optional(),
-  status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),
-  categoryId: z.string().optional(),
-  basePrice: z.number().positive(),
-  compareAtPrice: z.number().positive().optional(),
-  costPrice: z.number().positive().optional(),
-  material: z.string().optional(),
-  metalType: z.string().optional(),
-  metalPurity: z.string().optional(),
-  stoneType: z.string().optional(),
-  careInstructions: z.string().optional(),
-  tags: z.array(z.string()).default([]),
-  isFeatured: z.boolean().default(false),
-  isNewArrival: z.boolean().default(false),
-  isBestSeller: z.boolean().default(false),
-  isLimitedEdition: z.boolean().default(false),
-  engravingEnabled: z.boolean().default(false),
-  giftWrapEnabled: z.boolean().default(true),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-});
-
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const body = await request.json();
-    const data = productSchema.parse(body);
+    const data = productInputSchema.parse(await request.json());
 
-    let slug = slugify(data.name);
-    const existing = await db.product.findUnique({ where: { slug } });
-    if (existing) slug = `${slug}-${Date.now()}`;
+    let slug = slugify(data.name) || "product";
+    if (await db.product.findUnique({ where: { slug } })) slug = `${slug}-${Date.now()}`;
 
     const product = await db.product.create({
       data: {
-        ...data,
+        name: data.name,
         slug,
+        description: data.description || null,
+        shortDescription: data.shortDescription || null,
+        status: data.status,
+        categoryId: data.categoryId || null,
         basePrice: data.basePrice,
-        compareAtPrice: data.compareAtPrice,
-        costPrice: data.costPrice,
+        compareAtPrice: data.compareAtPrice ?? null,
+        tags: data.tags,
+        isFeatured: data.isFeatured,
+        isNewArrival: data.isNewArrival,
+        isBestSeller: data.isBestSeller,
+        images: {
+          create: data.images.map((img, i) => ({
+            url: img.url,
+            altText: data.name,
+            sortOrder: i,
+            isPrimary: i === 0,
+          })),
+        },
+        variants: {
+          create: data.variants.map((v, i) => ({
+            name: v.name,
+            sku: newSku(),
+            price: v.price ?? data.basePrice,
+            stock: v.stock,
+            isDefault: i === 0,
+          })),
+        },
       },
     });
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues[0]?.message ?? "Invalid product" }, { status: 400 });
     }
+    console.error("[POST /api/admin/products]", error);
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }
 }

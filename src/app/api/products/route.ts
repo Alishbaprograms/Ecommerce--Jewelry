@@ -28,10 +28,16 @@ export async function GET(request: NextRequest) {
 
     if (category) where.category = { slug: category };
 
-    if (collection) {
-      where.collections = {
-        some: { collection: { slug: collection } },
-      };
+    // The shop menu links categories as /collections/<slug>, so match a category or a collection.
+    if (collection && collection !== "all") {
+      where.AND = [
+        {
+          OR: [
+            { category: { slug: collection } },
+            { collections: { some: { collection: { slug: collection } } } },
+          ],
+        },
+      ];
     }
 
     if (minPrice || maxPrice) {
@@ -77,8 +83,8 @@ export async function GET(request: NextRequest) {
           },
           variants: {
             where: { isActive: true, deletedAt: null },
-            select: { id: true, sku: true, stock: true, price: true },
-            take: 1,
+            select: { id: true, name: true, sku: true, stock: true, price: true },
+            orderBy: { isDefault: "desc" },
           },
         },
       }),

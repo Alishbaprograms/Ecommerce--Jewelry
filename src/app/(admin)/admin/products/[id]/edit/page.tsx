@@ -37,7 +37,7 @@ export default function EditProductPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Products
       </Link>
-      <h1 className="font-serif text-3xl font-light mb-8">Edit Product</h1>
+      <h1 className="font-serif text-3xl font-light mb-8">Edit product</h1>
       <ProductForm
         product={data?.product}
         onSuccess={() => router.push("/admin/products")}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -19,31 +20,36 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 
-const navLinks = [
-  {
-    label: "Collections",
-    href: "/collections",
-    children: [
-      { label: "All Jewelry", href: "/collections/all" },
-      { label: "Rings", href: "/collections/rings" },
-      { label: "Necklaces", href: "/collections/necklaces" },
-      { label: "Earrings", href: "/collections/earrings" },
-      { label: "Bracelets", href: "/collections/bracelets" },
-    ],
-  },
-  { label: "New Arrivals", href: "/new-arrivals" },
+type NavLink = { label: string; href: string; children?: { label: string; href: string }[] };
+
+const staticLinks: NavLink[] = [
+  { label: "New", href: "/new-arrivals" },
   { label: "Best Sellers", href: "/best-sellers" },
   { label: "Sale", href: "/sale" },
-  { label: "Journal", href: "/journal" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const { data: session } = useSession();
+  const { data: categoryData } = useQuery({
+    queryKey: ["nav-categories"],
+    queryFn: async () => (await fetch("/api/categories")).json() as Promise<{ categories: { slug: string; name: string }[] }>,
+    staleTime: 5 * 60 * 1000,
+  });
+  const navLinks: NavLink[] = [
+    {
+      label: "Shop",
+      href: "/collections",
+      children: [
+        { label: "All Jewelry", href: "/collections/all" },
+        ...(categoryData?.categories ?? []).map((c) => ({ label: c.name, href: `/collections/${c.slug}` })),
+      ],
+    },
+    ...staticLinks,
+  ];
   const cartItems = useCartStore((s) => s.items);
   const wishlistItems = useWishlistStore((s) => s.items);
   const openCart = useCartStore((s) => s.openCart);
@@ -51,26 +57,17 @@ export function Navbar() {
   const totalCartItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  const isHomepage = pathname === "/";
-  const isTransparent = isHomepage && !scrolled && !mobileOpen;
+  const isTransparent = false;
 
   return (
     <>
       <header
         className={cn(
           "fixed top-0 inset-x-0 z-40 transition-all duration-500",
-          scrolled || !isHomepage
-            ? "bg-background/95 backdrop-blur-md border-b border-border luxury-shadow"
-            : "bg-transparent"
+          "bg-background/95 backdrop-blur-md border-b border-border"
         )}
       >
         {/* Announcement bar */}
@@ -80,7 +77,7 @@ export function Navbar() {
             isTransparent ? "bg-black/20 text-white/90" : "bg-foreground text-background"
           )}
         >
-          FREE SHIPPING ON ORDERS OVER RS. 50,000 · USE CODE <span className="font-semibold">ZOHRAE20</span> FOR 20% OFF
+          CASH ON DELIVERY · FREE DELIVERY ON ORDERS OVER RS. 5,000
         </div>
 
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -59,7 +59,6 @@ export default function AdminOrdersPage() {
           <h1 className="text-2xl font-bold text-zinc-900">Orders</h1>
           <p className="text-zinc-500 text-sm mt-1">{data?.pagination?.total ?? 0} total orders</p>
         </div>
-        <Button variant="outline" size="sm">Export CSV</Button>
       </div>
 
       {/* Status tabs */}
@@ -84,7 +83,7 @@ export default function AdminOrdersPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
         <input
           type="search"
-          placeholder="Search by order number, customer name or email..."
+          placeholder="Search by order number, name, phone or email..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="h-10 w-full pl-9 pr-4 text-sm border border-zinc-200 rounded-md focus:outline-none focus:border-zinc-400 bg-white"
@@ -131,7 +130,9 @@ export default function AdminOrdersPage() {
                   total: string;
                   status: keyof typeof STATUS_COLORS;
                   createdAt: string;
-                  user: { name: string; email: string };
+                  user: { name: string; email: string } | null;
+                  guestName: string | null;
+                  guestPhone: string | null;
                   items: Array<{ productName: string; quantity: number }>;
                 }) => (
                   <tr key={order.id} className="hover:bg-zinc-50 transition-colors">
@@ -139,8 +140,8 @@ export default function AdminOrdersPage() {
                       {order.orderNumber}
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-medium text-zinc-900">{order.user.name}</p>
-                      <p className="text-xs text-zinc-500">{order.user.email}</p>
+                      <p className="font-medium text-zinc-900">{order.guestName ?? order.user?.name ?? "—"}</p>
+                      <p className="text-xs text-zinc-500">{order.guestPhone ?? order.user?.email}</p>
                     </td>
                     <td className="px-6 py-4 text-zinc-600 text-xs">
                       {order.items.map((item) => `${item.productName} ×${item.quantity}`).join(", ")}

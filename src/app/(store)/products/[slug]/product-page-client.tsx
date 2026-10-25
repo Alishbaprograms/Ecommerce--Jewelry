@@ -140,6 +140,7 @@ export function ProductPageClient({ product }: Props) {
     addItem({
       id: selectedVariant.id,
       productId: product.id,
+      slug: product.slug,
       variantId: selectedVariant.id,
       name: product.name,
       variantName: selectedVariant.name,
@@ -326,6 +327,33 @@ export function ProductPageClient({ product }: Props) {
             )}
 
             <Separator />
+
+            {/* Simple options (colour / size) when the product has no attribute groups */}
+            {Object.keys(groupedAttributes).length === 0 && product.variants.length > 1 && (
+              <div>
+                <label className="text-xs tracking-widest uppercase font-medium block mb-3">
+                  Choose: <span className="font-normal text-muted-foreground">{selectedVariant?.name}</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariant(v)}
+                      disabled={v.stock <= 0}
+                      className={cn(
+                        "px-4 py-2 text-sm border rounded-full transition-all duration-200",
+                        selectedVariant?.id === v.id
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border hover:border-foreground",
+                        v.stock <= 0 && "opacity-40 cursor-not-allowed line-through"
+                      )}
+                    >
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Variant selection */}
             {Object.entries(groupedAttributes).map(([attrName, values]) => (

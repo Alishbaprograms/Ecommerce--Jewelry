@@ -1,337 +1,295 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Plus, Trash2, X } from "lucide-react";
 
-type FormValues = {
+type Variant = { id?: string; name: string; price: string; stock: string };
+
+export interface ProductFormProduct {
+  id: string;
   name: string;
-  shortDescription: string;
-  description: string;
+  shortDescription?: string | null;
+  description?: string | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
-  categoryId: string;
+  categoryId?: string | null;
   basePrice: string;
-  compareAtPrice: string;
-  costPrice: string;
-  material: string;
-  metalType: string;
-  metalPurity: string;
-  stoneType: string;
-  careInstructions: string;
+  compareAtPrice?: string | null;
   isFeatured: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
-  engravingEnabled: boolean;
-  giftWrapEnabled: boolean;
-  metaTitle: string;
-  metaDescription: string;
-  tags: string;
-};
-
-type Variant = {
-  id?: string;
-  name: string;
-  sku: string;
-  price: string;
-  stock: string;
-  isDefault: boolean;
-};
-
-interface Props {
-  product?: {
-    id: string;
-    name: string;
-    shortDescription?: string;
-    description?: string;
-    status: "DRAFT" | "ACTIVE" | "ARCHIVED";
-    categoryId?: string;
-    basePrice: string;
-    compareAtPrice?: string;
-    costPrice?: string;
-    material?: string;
-    metalType?: string;
-    metalPurity?: string;
-    stoneType?: string;
-    careInstructions?: string;
-    isFeatured: boolean;
-    isNewArrival: boolean;
-    isBestSeller: boolean;
-    engravingEnabled: boolean;
-    giftWrapEnabled: boolean;
-    metaTitle?: string;
-    metaDescription?: string;
-    tags: string[];
-    variants: Variant[];
-    images: Array<{ id: string; url: string; isPrimary: boolean }>;
-  };
-  onSuccess: () => void;
+  variants: Array<{ id: string; name: string; price: string; stock: number }>;
+  images: Array<{ id: string; url: string }>;
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+const inputCls =
+  "w-full border border-zinc-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-zinc-900";
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs tracking-widest uppercase text-muted-foreground mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-zinc-800 mb-1.5">{label}</label>
       {children}
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+      {hint && <p className="text-xs text-zinc-500 mt-1">{hint}</p>}
     </div>
   );
 }
 
-const inputCls = "w-full border border-input px-3 py-2.5 text-sm focus:outline-none focus:border-foreground bg-background";
-const checkboxRow = (label: string, key: keyof FormValues, register: ReturnType<typeof useForm<FormValues>>["register"]) => (
-  <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-    <input type="checkbox" {...register(key as never)} className="h-4 w-4" />
-    {label}
-  </label>
-);
+// Phone photos are often 5–10 MB; shrink in the browser so uploads stay fast and under host limits.
+async function shrinkImage(file: File): Promise<File> {
+  if (file.size < 1_200_000 && file.type !== "image/heic") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+    return blob ? new File([blob], "photo.jpg", { type: "image/jpeg" }) : file;
+  } catch {
+    return file;
+  }
+}
 
-export function ProductForm({ product, onSuccess }: Props) {
+export function ProductForm({ product, onSuccess }: { product?: ProductFormProduct; onSuccess: () => void }) {
   const isEditing = !!product;
+  const fileInput = useRef<HTMLInputElement>(null);
 
+  const [name, setName] = useState(product?.name ?? "");
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
+  const [price, setPrice] = useState(product?.basePrice ? String(Number(product.basePrice)) : "");
+  const [comparePrice, setComparePrice] = useState(
+    product?.compareAtPrice ? String(Number(product.compareAtPrice)) : ""
+  );
+  const [visible, setVisible] = useState((product?.status ?? "ACTIVE") === "ACTIVE");
+  const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
+  const [isNewArrival, setIsNewArrival] = useState(product?.isNewArrival ?? true);
+  const [isBestSeller, setIsBestSeller] = useState(product?.isBestSeller ?? false);
+  const [images, setImages] = useState<string[]>(product?.images?.map((i) => i.url) ?? []);
+  const [uploading, setUploading] = useState(false);
+
+  const [hasOptions, setHasOptions] = useState((product?.variants?.length ?? 0) > 1);
+  const [stock, setStock] = useState(String(product?.variants?.[0]?.stock ?? 10));
   const [variants, setVariants] = useState<Variant[]>(
-    product?.variants?.map((v) => ({ ...v, price: v.price?.toString() ?? "", stock: String(v.stock ?? 0) })) ?? [
-      { name: "Default", sku: "", price: "", stock: "0", isDefault: true },
-    ]
+    product && product.variants.length > 1
+      ? product.variants.map((v) => ({ id: v.id, name: v.name, price: "", stock: String(v.stock) }))
+      : [{ name: "", price: "", stock: "10" }]
   );
 
   const { data: categoriesData } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["admin-categories"],
     queryFn: async () => {
       const res = await fetch("/api/admin/categories");
-      if (!res.ok) return { categories: [] };
-      return res.json();
+      return res.ok ? res.json() : { categories: [] };
     },
   });
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    defaultValues: {
-      name: product?.name ?? "",
-      shortDescription: product?.shortDescription ?? "",
-      description: product?.description ?? "",
-      status: product?.status ?? "DRAFT",
-      categoryId: product?.categoryId ?? "",
-      basePrice: product?.basePrice ?? "",
-      compareAtPrice: product?.compareAtPrice ?? "",
-      costPrice: product?.costPrice ?? "",
-      material: product?.material ?? "",
-      metalType: product?.metalType ?? "",
-      metalPurity: product?.metalPurity ?? "",
-      stoneType: product?.stoneType ?? "",
-      careInstructions: product?.careInstructions ?? "",
-      isFeatured: product?.isFeatured ?? false,
-      isNewArrival: product?.isNewArrival ?? false,
-      isBestSeller: product?.isBestSeller ?? false,
-      engravingEnabled: product?.engravingEnabled ?? false,
-      giftWrapEnabled: product?.giftWrapEnabled ?? true,
-      metaTitle: product?.metaTitle ?? "",
-      metaDescription: product?.metaDescription ?? "",
-      tags: product?.tags?.join(", ") ?? "",
-    },
-  });
+  async function handleFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      for (const original of Array.from(files)) {
+        const file = await shrinkImage(original);
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/admin/upload", { method: "POST", body });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error ?? "Upload failed");
+        setImages((prev) => [...prev, data.url]);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
 
   const mutation = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const payload = {
-        ...values,
-        basePrice: Number(values.basePrice),
-        compareAtPrice: values.compareAtPrice === "" ? undefined : Number(values.compareAtPrice),
-        costPrice: values.costPrice === "" ? undefined : Number(values.costPrice),
-        tags: values.tags ? values.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
-        variants: variants.map((v) => ({
-          ...v,
-          price: Number(v.price) || 0,
-          stock: parseInt(v.stock) || 0,
-        })),
-      };
+    mutationFn: async () => {
+      const basePrice = Number(price);
+      if (!name.trim()) throw new Error("Please enter a product name");
+      if (!basePrice || basePrice <= 0) throw new Error("Please enter a price");
 
-      const url = isEditing ? `/api/admin/products/${product!.id}` : "/api/admin/products";
-      const method = isEditing ? "PATCH" : "POST";
+      const payloadVariants = hasOptions
+        ? variants
+            .filter((v) => v.name.trim())
+            .map((v) => ({
+              id: v.id,
+              name: v.name.trim(),
+              price: v.price ? Number(v.price) : null,
+              stock: parseInt(v.stock) || 0,
+            }))
+        : [{ id: product?.variants?.[0]?.id, name: "Default", price: null, stock: parseInt(stock) || 0 }];
+      if (payloadVariants.length === 0) throw new Error("Add at least one option, or turn options off");
 
-      const res = await fetch(url, {
-        method,
+      const res = await fetch(isEditing ? `/api/admin/products/${product!.id}` : "/api/admin/products", {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: name.trim(),
+          description,
+          categoryId: categoryId || null,
+          basePrice,
+          compareAtPrice: comparePrice ? Number(comparePrice) : null,
+          status: visible ? "ACTIVE" : "DRAFT",
+          isFeatured,
+          isNewArrival,
+          isBestSeller,
+          images: images.map((url) => ({ url })),
+          variants: payloadVariants,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to save");
-      return res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Failed to save");
+      return data;
     },
     onSuccess: () => {
-      toast.success(isEditing ? "Product updated" : "Product created");
+      toast.success(isEditing ? "Product saved" : "Product added");
       onSuccess();
     },
-    onError: () => toast.error("Failed to save product"),
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  function addVariant() {
-    setVariants((v) => [...v, { name: "", sku: "", price: "", stock: "0", isDefault: false }]);
-  }
-
-  function removeVariant(i: number) {
-    setVariants((v) => v.filter((_, idx) => idx !== i));
-  }
-
-  function updateVariant(i: number, key: keyof Variant, value: string | boolean) {
-    setVariants((v) => v.map((item, idx) => idx === i ? { ...item, [key]: value } : item));
-  }
+  const check = (label: string, value: boolean, set: (v: boolean) => void) => (
+    <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <input type="checkbox" checked={value} onChange={(e) => set(e.target.checked)} className="h-4 w-4" />
+      {label}
+    </label>
+  );
 
   return (
-    <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-8">
-      {/* Basic Info */}
-      <section className="border border-border p-6 space-y-4">
-        <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground">Basic Information</h2>
-        <Field label="Product Name" error={errors.name?.message}>
-          <input {...register("name")} className={inputCls} placeholder="e.g. Aurora Diamond Ring" />
-        </Field>
-        <Field label="Short Description">
-          <input {...register("shortDescription")} className={inputCls} placeholder="One-line summary shown on cards" />
-        </Field>
-        <Field label="Full Description">
-          <textarea {...register("description")} rows={5} className={inputCls} placeholder="Detailed product description..." />
-        </Field>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Status">
-            <select {...register("status")} className={inputCls}>
-              <option value="DRAFT">Draft</option>
-              <option value="ACTIVE">Active</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
-          </Field>
-          <Field label="Category">
-            <select {...register("categoryId")} className={inputCls}>
-              <option value="">— No category —</option>
-              {categoriesData?.categories?.map((c: { id: string; name: string }) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="border border-border p-6 space-y-4">
-        <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground">Pricing (PKR)</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Base Price" error={errors.basePrice?.message}>
-            <input {...register("basePrice")} type="number" step="1" className={inputCls} placeholder="0" />
-          </Field>
-          <Field label="Compare At Price">
-            <input {...register("compareAtPrice")} type="number" step="1" className={inputCls} placeholder="0" />
-          </Field>
-          <Field label="Cost Price">
-            <input {...register("costPrice")} type="number" step="1" className={inputCls} placeholder="0" />
-          </Field>
-        </div>
-      </section>
-
-      {/* Variants */}
-      <section className="border border-border p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground">Variants & Stock</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-            <Plus className="h-4 w-4 mr-1" />Add Variant
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {variants.map((v, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-3">
-                {i === 0 && <p className="text-xs text-muted-foreground mb-1">Name</p>}
-                <input value={v.name} onChange={(e) => updateVariant(i, "name", e.target.value)}
-                  className={inputCls} placeholder="e.g. Size 6" />
-              </div>
-              <div className="col-span-3">
-                {i === 0 && <p className="text-xs text-muted-foreground mb-1">SKU</p>}
-                <input value={v.sku} onChange={(e) => updateVariant(i, "sku", e.target.value)}
-                  className={inputCls} placeholder="SKU-001" />
-              </div>
-              <div className="col-span-2">
-                {i === 0 && <p className="text-xs text-muted-foreground mb-1">Price</p>}
-                <input value={v.price} onChange={(e) => updateVariant(i, "price", e.target.value)}
-                  type="number" className={inputCls} placeholder="0" />
-              </div>
-              <div className="col-span-2">
-                {i === 0 && <p className="text-xs text-muted-foreground mb-1">Stock</p>}
-                <input value={v.stock} onChange={(e) => updateVariant(i, "stock", e.target.value)}
-                  type="number" className={inputCls} placeholder="0" />
-              </div>
-              <div className="col-span-1 flex items-center justify-center pb-0.5">
-                {i === 0 && <p className="text-xs text-muted-foreground mb-1 invisible">D</p>}
-                <label className="flex items-center gap-1 text-xs cursor-pointer">
-                  <input type="checkbox" checked={v.isDefault} onChange={(e) => updateVariant(i, "isDefault", e.target.checked)} />
-                  Default
-                </label>
-              </div>
-              <div className="col-span-1 flex justify-end">
-                {variants.length > 1 && (
-                  <button type="button" onClick={() => removeVariant(i)} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        mutation.mutate();
+      }}
+      className="space-y-6"
+    >
+      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold text-zinc-900">Photos</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {images.map((url, i) => (
+            <div key={url} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100">
+              <Image src={url} alt="" fill sizes="150px" className="object-cover" />
+              {i === 0 && (
+                <span className="absolute bottom-1 left-1 text-[10px] bg-black/70 text-white px-1.5 py-0.5 rounded">Main</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setImages((prev) => prev.filter((u) => u !== url))}
+                className="absolute top-1 right-1 bg-white/90 rounded-full p-1 hover:bg-white"
+                aria-label="Remove photo"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           ))}
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            disabled={uploading}
+            className="aspect-square rounded-lg border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:border-zinc-500 hover:text-zinc-700 text-xs"
+          >
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+            {uploading ? "Uploading..." : "Add photo"}
+          </button>
         </div>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <p className="text-xs text-zinc-500">The first photo is the main one shown in the shop.</p>
       </section>
 
-      {/* Material & Details */}
-      <section className="border border-border p-6 space-y-4">
-        <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground">Material & Details</h2>
+      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold text-zinc-900">Details</h2>
+        <Field label="Product name">
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g. Rainbow Bead Necklace" />
+        </Field>
+        <Field label="Description">
+          <textarea value={description ?? ""} onChange={(e) => setDescription(e.target.value)} rows={5} className={inputCls} placeholder="Tell parents what it is, materials, size, safety notes..." />
+        </Field>
+        <Field label="Category">
+          <select value={categoryId ?? ""} onChange={(e) => setCategoryId(e.target.value)} className={inputCls}>
+            <option value="">No category</option>
+            {categoriesData?.categories?.map((c: { id: string; name: string }) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </Field>
+      </section>
+
+      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold text-zinc-900">Price</h2>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Material">
-            <input {...register("material")} className={inputCls} placeholder="e.g. 18K Gold" />
+          <Field label="Price (Rs.)">
+            <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} className={inputCls} placeholder="1500" />
           </Field>
-          <Field label="Metal Type">
-            <select {...register("metalType")} className={inputCls}>
-              <option value="">— Select —</option>
-              {["Gold", "Silver", "Rose Gold", "Platinum", "Mixed Metal"].map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+          <Field label="Old price (optional)" hint="Fill this in to show a sale: old price crossed out.">
+            <input type="number" min="0" value={comparePrice} onChange={(e) => setComparePrice(e.target.value)} className={inputCls} placeholder="2000" />
           </Field>
-          <Field label="Metal Purity">
-            <input {...register("metalPurity")} className={inputCls} placeholder="e.g. 18K, 925" />
-          </Field>
-          <Field label="Stone Type">
-            <input {...register("stoneType")} className={inputCls} placeholder="e.g. Diamond, Pearl" />
-          </Field>
-        </div>
-        <Field label="Care Instructions">
-          <textarea {...register("careInstructions")} rows={3} className={inputCls} placeholder="How to care for this piece..." />
-        </Field>
-        <Field label="Tags (comma separated)">
-          <input {...register("tags")} className={inputCls} placeholder="rings, gold, diamond, engagement" />
-        </Field>
-      </section>
-
-      {/* Flags */}
-      <section className="border border-border p-6 space-y-3">
-        <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground mb-2">Product Flags</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {checkboxRow("Featured", "isFeatured", register)}
-          {checkboxRow("New Arrival", "isNewArrival", register)}
-          {checkboxRow("Best Seller", "isBestSeller", register)}
-          {checkboxRow("Engraving Enabled", "engravingEnabled", register)}
-          {checkboxRow("Gift Wrap Enabled", "giftWrapEnabled", register)}
         </div>
       </section>
 
-      {/* SEO */}
-      <section className="border border-border p-6 space-y-4">
-        <h2 className="font-medium text-sm tracking-widest uppercase text-muted-foreground">SEO</h2>
-        <Field label="Meta Title">
-          <input {...register("metaTitle")} className={inputCls} placeholder="SEO title" />
-        </Field>
-        <Field label="Meta Description">
-          <textarea {...register("metaDescription")} rows={2} className={inputCls} placeholder="SEO description (max 160 chars)" />
-        </Field>
+      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold text-zinc-900">Stock</h2>
+        {!hasOptions ? (
+          <Field label="How many in stock?">
+            <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} className={`${inputCls} max-w-[200px]`} />
+          </Field>
+        ) : (
+          <div className="space-y-2">
+            <div className="grid grid-cols-12 gap-2 text-xs text-zinc-500">
+              <span className="col-span-5">Option (e.g. Pink, Blue)</span>
+              <span className="col-span-3">Price (optional)</span>
+              <span className="col-span-3">Stock</span>
+            </div>
+            {variants.map((v, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                <input className={`${inputCls} col-span-5`} value={v.name} placeholder="Pink"
+                  onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                <input type="number" min="0" className={`${inputCls} col-span-3`} value={v.price} placeholder="Same"
+                  onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} />
+                <input type="number" min="0" className={`${inputCls} col-span-3`} value={v.stock}
+                  onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)))} />
+                <button type="button" className="col-span-1 text-zinc-400 hover:text-red-600 flex justify-center"
+                  onClick={() => setVariants((all) => all.filter((_, j) => j !== i))} aria-label="Remove option">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => setVariants((all) => [...all, { name: "", price: "", stock: "10" }])}>
+              <Plus className="h-4 w-4 mr-1" /> Add option
+            </Button>
+          </div>
+        )}
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" className="h-4 w-4" checked={hasOptions} onChange={(e) => setHasOptions(e.target.checked)} />
+          This product comes in different colours / sizes
+        </label>
+      </section>
+
+      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-3">
+        <h2 className="font-semibold text-zinc-900">Show in shop</h2>
+        {check("Visible in the shop (untick to hide it)", visible, setVisible)}
+        {check("Mark as New", isNewArrival, setIsNewArrival)}
+        {check("Mark as Best Seller", isBestSeller, setIsBestSeller)}
+        {check("Feature on the home page", isFeatured, setIsFeatured)}
       </section>
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Product"}
+        <Button type="submit" disabled={mutation.isPending || uploading}>
+          {mutation.isPending ? "Saving..." : isEditing ? "Save changes" : "Add product"}
         </Button>
         <Button type="button" variant="outline" onClick={onSuccess}>Cancel</Button>
       </div>

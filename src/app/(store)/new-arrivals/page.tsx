@@ -24,7 +24,6 @@ async function getNewArrivals() {
       variants: {
         where: { isActive: true, deletedAt: null },
         orderBy: { isDefault: "desc" },
-        take: 1,
       },
     },
     orderBy: { createdAt: "desc" },

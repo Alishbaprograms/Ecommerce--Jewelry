@@ -22,7 +22,6 @@ async function getBestSellers() {
       variants: {
         where: { isActive: true, deletedAt: null },
         orderBy: { isDefault: "desc" },
-        take: 1,
       },
     },
     orderBy: [{ salesCount: "desc" }, { averageRating: "desc" }],

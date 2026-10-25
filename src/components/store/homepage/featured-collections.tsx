@@ -2,92 +2,50 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { ArrowRight } from "lucide-react";
 
-const collections = [
-  {
-    name: "Rings",
-    slug: "rings",
-    description: "From delicate bands to statement pieces",
-    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&q=80",
-    count: "48 pieces",
-  },
-  {
-    name: "Necklaces",
-    slug: "necklaces",
-    description: "Layerable chains and pendants",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80",
-    count: "62 pieces",
-  },
-  {
-    name: "Earrings",
-    slug: "earrings",
-    description: "Studs, hoops, and drops",
-    image: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=600&q=80",
-    count: "54 pieces",
-  },
-  {
-    name: "Bracelets",
-    slug: "bracelets",
-    description: "Stacking bracelets and bangles",
-    image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80",
-    count: "36 pieces",
-  },
+const categories = [
+  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", note: "Clip-on, no piercing", bg: "bg-blush" },
+  { name: "Bead Bracelets", slug: "bead-bracelets", emoji: "🌈", note: "Colourful & stretchy", bg: "bg-butter" },
+  { name: "Bead Necklaces", slug: "bead-necklaces", emoji: "🌸", note: "Sweet little strands", bg: "bg-lilac" },
+  { name: "Hair Clips", slug: "hair-accessories", emoji: "🎀", note: "Clips, bows & bands", bg: "bg-mint" },
+  { name: "Rings", slug: "rings", emoji: "💍", note: "Tiny adjustable rings", bg: "bg-sky" },
 ];
 
 export function FeaturedCollections() {
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
 
   return (
-    <section ref={ref} className="py-20 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto">
+    <section ref={ref} className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-12"
+        className="text-center mb-10"
       >
-        <p className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground mb-3">
-          Curated for You
-        </p>
-        <h2 className="font-serif text-3xl sm:text-4xl font-light">Shop by Category</h2>
+        <h2 className="text-3xl sm:text-4xl font-semibold">Shop by category</h2>
+        <p className="text-muted-foreground mt-2">Find the perfect little something</p>
       </motion.div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {collections.map((col, i) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
+        {categories.map((c, i) => (
           <motion.div
-            key={col.slug}
-            initial={{ opacity: 0, y: 32 }}
+            key={c.slug}
+            initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: i * 0.1 }}
+            transition={{ duration: 0.5, delay: i * 0.08 }}
+            className={i === categories.length - 1 ? "col-span-2 sm:col-span-1" : ""}
           >
-            <Link href={`/collections/${col.slug}`} className="group block">
-              <div className="relative overflow-hidden aspect-[3/4] mb-4 bg-muted">
-                <Image
-                  src={col.image}
-                  alt={col.name}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                  <span className="inline-flex items-center gap-1 text-white text-xs tracking-widest uppercase bg-black/60 backdrop-blur-sm px-3 py-2">
-                    Shop Now <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-light group-hover:text-muted-foreground transition-colors">
-                  {col.name}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{col.description}</p>
-                <p className="text-[11px] tracking-widest uppercase text-muted-foreground mt-1">
-                  {col.count}
-                </p>
-              </div>
+            <Link
+              href={`/collections/${c.slug}`}
+              className={`group flex flex-col items-center text-center rounded-3xl ${c.bg} px-3 py-7 sm:py-9 transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
+            >
+              <span className="text-5xl sm:text-6xl mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" aria-hidden>
+                {c.emoji}
+              </span>
+              <h3 className="text-base sm:text-lg font-semibold">{c.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{c.note}</p>
             </Link>
           </motion.div>
         ))}

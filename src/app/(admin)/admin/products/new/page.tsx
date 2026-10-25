@@ -15,7 +15,7 @@ export default function NewProductPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Products
       </Link>
-      <h1 className="font-serif text-3xl font-light mb-8">Add New Product</h1>
+      <h1 className="font-serif text-3xl font-light mb-8">Add a product</h1>
       <ProductForm onSuccess={() => router.push("/admin/products")} />
     </div>
   );

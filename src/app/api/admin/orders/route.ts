@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-
-async function requireAdmin() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !["SUPER_ADMIN", "SHOP_ADMIN", "STAFF"].includes((session.user as { role?: string }).role ?? "")) {
-    return null;
-  }
-  return session;
-}
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") ?? "";
@@ -26,8 +16,10 @@ export async function GET(request: NextRequest) {
   if (search) {
     where.OR = [
       { orderNumber: { contains: search, mode: "insensitive" } },
+      { guestName: { contains: search, mode: "insensitive" } },
+      { guestPhone: { contains: search } },
+      { guestEmail: { contains: search, mode: "insensitive" } },
       { user: { name: { contains: search, mode: "insensitive" } } },
-      { user: { email: { contains: search, mode: "insensitive" } } },
     ];
   }
 

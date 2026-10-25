@@ -1,17 +1,45 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { requireAdmin } from "@/lib/admin-auth";
+import { slugify } from "@/lib/utils";
 
 export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const categories = await db.category.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      image: true,
+      isActive: true,
+      _count: { select: { products: { where: { deletedAt: null } } } },
+    },
   });
 
   return NextResponse.json({ categories });
+}
+
+export async function POST(request: NextRequest) {
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json().catch(() => ({}));
+  const name = String(body.name ?? "").trim();
+  if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+
+  let slug = slugify(name) || "category";
+  if (await db.category.findUnique({ where: { slug } })) slug = `${slug}-${Date.now()}`;
+
+  const category = await db.category.create({
+    data: {
+      name,
+      slug,
+      description: body.description ? String(body.description) : null,
+      image: body.image ? String(body.image) : null,
+    },
+  });
+  return NextResponse.json({ category }, { status: 201 });
 }

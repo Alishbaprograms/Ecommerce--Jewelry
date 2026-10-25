@@ -30,7 +30,8 @@ interface Props {
       total: string;
       status: string;
       createdAt: string;
-      user: { name: string };
+      user: { name: string } | null;
+      guestName: string | null;
       items: Array<{ productName: string }>;
     }>;
     topProducts: Array<{
@@ -205,10 +206,10 @@ export function AdminDashboardClient({ stats }: Props) {
                 <div key={order.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="h-8 w-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium">
-                      {order.user.name[0]}
+                      {(order.guestName ?? order.user?.name ?? "?")[0]}
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{order.user.name}</p>
+                      <p className="text-sm font-medium">{order.guestName ?? order.user?.name ?? "Guest"}</p>
                       <p className="text-xs text-zinc-500">{order.orderNumber}</p>
                     </div>
                   </div>

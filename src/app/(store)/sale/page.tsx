@@ -23,7 +23,6 @@ async function getSaleProducts() {
       variants: {
         where: { isActive: true, deletedAt: null },
         orderBy: { isDefault: "desc" },
-        take: 1,
       },
     },
     orderBy: { createdAt: "desc" },

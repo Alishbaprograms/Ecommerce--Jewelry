@@ -13,6 +13,7 @@ const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
+  const total = searchParams.get("total");
 
   const [windowSize, setWindowSize] = React.useState({ width: 0, height: 0 });
   const [showConfetti, setShowConfetti] = React.useState(true);
@@ -52,7 +53,7 @@ function OrderConfirmationContent() {
 
           <h1 className="font-serif text-4xl font-light mb-3">Order Confirmed!</h1>
           <p className="text-muted-foreground mb-2">
-            Thank you for your order. We'll have your jewelry beautifully packaged and on its way soon.
+            Thank you for your order. We'll confirm your order shortly and get it on its way.
           </p>
 
           {orderNumber && (
@@ -62,11 +63,17 @@ function OrderConfirmationContent() {
             </div>
           )}
 
+          {total && (
+            <p className="text-sm mb-8">
+              Please keep <span className="font-semibold">Rs. {Number(total).toLocaleString("en-PK")}</span> ready in cash when your order arrives.
+            </p>
+          )}
+
           <div className="grid grid-cols-3 gap-4 mb-10">
             {[
-              { Icon: Mail, label: "Confirmation email sent" },
-              { Icon: Package, label: "Packaged with care" },
-              { Icon: Truck, label: "Shipped within 1-2 days" },
+              { Icon: Mail, label: "We'll call to confirm" },
+              { Icon: Package, label: "Packed with care" },
+              { Icon: Truck, label: "Pay cash on delivery" },
             ].map(({ Icon, label }) => (
               <div key={label} className="text-center">
                 <Icon className="h-6 w-6 mx-auto mb-2 text-muted-foreground" strokeWidth={1.5} />
@@ -77,9 +84,6 @@ function OrderConfirmationContent() {
 
           <div className="flex gap-4 justify-center">
             <Button asChild>
-              <Link href="/account">Track Order</Link>
-            </Button>
-            <Button asChild variant="outline">
               <Link href="/collections">Continue Shopping</Link>
             </Button>
           </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Fredoka, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -7,52 +7,45 @@ import { CartDrawer } from "@/components/store/cart-drawer";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fredoka = Fredoka({
+  variable: "--font-fredoka",
+  subsets: ["latin"],
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Zohraé — Fine Jewelry for Life's Precious Moments",
+    default: "Zohraé — Tiny Treasures for Little Ones",
     template: "%s | Zohraé",
   },
   description:
-    "Discover handcrafted fine jewelry. Rings, necklaces, earrings, and bracelets designed for the modern woman. Free shipping on orders over Rs. 50,000.",
+    "Kids' jewelry made for little ones: magnetic clip-on earrings, bead bracelets and necklaces, hair accessories and rings. Cash on delivery across Pakistan.",
   keywords: [
-    "jewelry",
-    "fine jewelry",
-    "rings",
-    "necklaces",
-    "earrings",
-    "bracelets",
-    "gold jewelry",
-    "luxury jewelry",
+    "kids jewelry",
+    "magnetic earrings for kids",
+    "bead bracelets",
+    "bead necklaces",
+    "hair accessories",
+    "girls jewelry Pakistan",
   ],
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_PK",
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "Zohraé",
-    title: "Zohraé — Fine Jewelry for Life's Precious Moments",
-    description: "Discover handcrafted fine jewelry designed for the modern woman.",
+    title: "Zohraé — Tiny Treasures for Little Ones",
+    description: "Magnetic earrings, bead jewelry and more for kids. Cash on delivery across Pakistan.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Zohraé",
-    description: "Discover handcrafted fine jewelry designed for the modern woman.",
+    description: "Magnetic earrings, bead jewelry and more for kids.",
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
@@ -62,15 +55,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} font-sans antialiased`}>
+      <body className={`${fredoka.variable} ${nunito.variable} font-sans antialiased`}>
         <Providers>
           {children}
           <Toaster
             position="top-right"
             toastOptions={{
               style: {
-                fontFamily: "var(--font-geist-sans)",
-                borderRadius: 0,
+                fontFamily: "var(--font-nunito)",
+                borderRadius: 16,
               },
             }}
           />

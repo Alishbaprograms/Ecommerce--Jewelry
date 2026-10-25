@@ -29,12 +29,12 @@ async function getDashboardStats() {
   ] = await Promise.all([
     db.order.count({ where: { createdAt: { gte: todayStart }, deletedAt: null } }),
     db.order.aggregate({
-      where: { createdAt: { gte: todayStart }, paymentStatus: "PAID", deletedAt: null },
+      where: { createdAt: { gte: todayStart }, status: { not: "CANCELLED" }, deletedAt: null },
       _sum: { total: true },
     }),
     db.order.count({ where: { createdAt: { gte: monthStart }, deletedAt: null } }),
     db.order.aggregate({
-      where: { createdAt: { gte: monthStart }, paymentStatus: "PAID", deletedAt: null },
+      where: { createdAt: { gte: monthStart }, status: { not: "CANCELLED" }, deletedAt: null },
       _sum: { total: true },
     }),
     db.user.count({ where: { role: "CUSTOMER", deletedAt: null } }),

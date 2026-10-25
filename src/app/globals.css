@@ -1,32 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #1a1a1a;
+  --color-background: #fffaf5;
+  --color-foreground: #2b2540;
   --color-card: #ffffff;
-  --color-card-foreground: #1a1a1a;
-  --color-muted: #f5f5f0;
-  --color-muted-foreground: #737373;
-  --color-accent: #f5f5f0;
-  --color-accent-foreground: #1a1a1a;
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #1a1a1a;
-  --color-primary: #1a1a1a;
-  --color-primary-foreground: #fafaf8;
-  --color-secondary: #f5f5f0;
-  --color-secondary-foreground: #1a1a1a;
+  --color-card-foreground: #2b2540;
+  --color-muted: #fdf0f4;
+  --color-muted-foreground: #75708a;
+  --color-accent: #f3ecff;
+  --color-accent-foreground: #2b2540;
+  --color-border: #f0e2ea;
+  --color-input: #ead9e2;
+  --color-ring: #d6336c;
+  --color-primary: #d6336c;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3ecff;
+  --color-secondary-foreground: #2b2540;
   --color-destructive: #dc2626;
-  --color-destructive-foreground: #fafaf8;
-  --color-gold: #c9a84c;
-  --color-gold-light: #d4b96e;
-  --color-gold-dark: #a8872e;
-  --color-cream: #fafaf8;
+  --color-destructive-foreground: #ffffff;
+  /* "gold" token names are kept for existing components; retinted to a playful pink */
+  --color-gold: #f0589a;
+  --color-gold-light: #f8a5c8;
+  --color-gold-dark: #d6336c;
+  --color-cream: #fff6ee;
 
-  --font-serif: "Georgia", "Times New Roman", serif;
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  /* kid-friendly palette */
+  --color-blush: #ffe3ee;
+  --color-lilac: #ece3ff;
+  --color-mint: #dcf7ea;
+  --color-butter: #fff2c4;
+  --color-sky: #dff0ff;
 
-  --radius: 0;
+  --font-serif: var(--font-fredoka), "Trebuchet MS", system-ui, sans-serif;
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+
+  --radius: 1rem;
+}
+
+:root {
+  /* raw HSL triplets for components that use hsl(var(--gold)) */
+  --gold: 335 84% 64%;
+  --gold-dark: 335 67% 51%;
+  --cream: 28 100% 96%;
 }
 
 @layer base {
@@ -45,7 +60,8 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
+    font-weight: 500;
   }
 
   ::selection {
@@ -81,7 +97,7 @@
   }
 
   .luxury-shadow {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    box-shadow: 0 4px 6px -1px rgb(214 51 108 / 0.08), 0 2px 4px -2px rgb(214 51 108 / 0.06);
   }
 
   .luxury-shadow-md {
@@ -90,6 +106,10 @@
 
   .luxury-shadow-lg {
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.12);
+  }
+
+  .float-slow {
+    animation: floaty 6s ease-in-out infinite;
   }
 
   .animate-shimmer {
@@ -102,6 +122,11 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
 }
 
 @keyframes shimmer {
