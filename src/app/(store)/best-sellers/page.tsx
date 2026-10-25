@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Best Sellers — Zohraé",
-  description: "Our most-loved fine jewelry pieces, chosen by you.",
+  description: "The kids jewelry our customers love most.",
 };
 
 async function getBestSellers() {

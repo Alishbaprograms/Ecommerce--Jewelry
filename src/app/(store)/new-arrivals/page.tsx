@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "New Arrivals — Zohraé",
-  description: "Discover our latest fine jewelry pieces, just arrived.",
+  description: "The newest kids jewelry at Zohraé, just arrived.",
 };
 
 async function getNewArrivals() {

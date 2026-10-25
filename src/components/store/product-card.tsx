@@ -77,9 +77,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       stock: defaultVariant.stock,
       sku: defaultVariant.sku,
     });
-    toast.success(`${product.name} added to cart`, {
-      description: formatPrice(price),
-    });
+    // The treasure box drawer opens by itself, so no extra pop-up message is needed.
     setTimeout(() => setAddingToCart(false), 600);
   }
 

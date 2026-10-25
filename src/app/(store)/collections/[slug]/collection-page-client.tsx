@@ -20,13 +20,11 @@ const sortOptions = [
 
 const filterOptions = {
   price: [
-    { label: "Under Rs. 50,000", min: 0, max: 50000 },
-    { label: "Rs. 50,000 – 150,000", min: 50000, max: 150000 },
-    { label: "Rs. 150,000 – 300,000", min: 150000, max: 300000 },
-    { label: "Over Rs. 300,000", min: 300000, max: 99999999 },
+    { label: "Under Rs. 500", min: 0, max: 500 },
+    { label: "Rs. 500 – 1,000", min: 500, max: 1000 },
+    { label: "Rs. 1,000 – 2,000", min: 1000, max: 2000 },
+    { label: "Over Rs. 2,000", min: 2000, max: 99999999 },
   ],
-  material: ["Gold", "Silver", "Rose Gold", "Platinum", "Mixed Metal"],
-  stone: ["Diamond", "Pearl", "Emerald", "Sapphire", "Ruby", "No Stone"],
 };
 
 async function fetchProducts(params: Record<string, string>) {
@@ -107,17 +105,17 @@ export function CollectionPageClient({ slug, searchParams }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-8">
-          {/* Sidebar filters */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+          {/* Filters: above the products on phones, beside them on larger screens */}
           <AnimatePresence>
             {filtersOpen && (
               <motion.aside
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 256 }}
-                exit={{ opacity: 0, width: 0 }}
-                className="shrink-0 overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="shrink-0 rounded-2xl bg-muted/60 p-4 lg:w-64 lg:rounded-none lg:bg-transparent lg:p-0"
               >
-                <div className="w-64 space-y-8 pr-8">
+                <div className="w-full space-y-6 lg:space-y-8 lg:pr-8">
                   <div className="flex items-center justify-between">
                     <span className="text-xs tracking-widest uppercase font-medium">Filters</span>
                     {Object.keys(activeFilters).length > 0 && (
@@ -154,39 +152,13 @@ export function CollectionPageClient({ slug, searchParams }: Props) {
                       ))}
                     </div>
                   </div>
-
-                  {/* Material filter */}
-                  <div>
-                    <h3 className="text-xs tracking-widest uppercase font-medium mb-3">Material</h3>
-                    <div className="space-y-2">
-                      {filterOptions.material.map((m) => (
-                        <label key={m} className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" className="accent-foreground" />
-                          <span className="text-sm text-muted-foreground">{m}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stone filter */}
-                  <div>
-                    <h3 className="text-xs tracking-widest uppercase font-medium mb-3">Stone</h3>
-                    <div className="space-y-2">
-                      {filterOptions.stone.map((s) => (
-                        <label key={s} className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" className="accent-foreground" />
-                          <span className="text-sm text-muted-foreground">{s}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </motion.aside>
             )}
           </AnimatePresence>
 
           {/* Product grid */}
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {Array.from({ length: 8 }).map((_, i) => (

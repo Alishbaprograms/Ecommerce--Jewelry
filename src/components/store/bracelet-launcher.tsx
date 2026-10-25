@@ -56,9 +56,9 @@ export function BraceletLauncher() {
           transition={{ duration: 2.4, ease: "easeOut" }}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.94 }}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-lilac ring-2 ring-white shadow-lg shadow-black/10"
+          className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-lilac ring-2 ring-white shadow-lg shadow-black/10"
         >
-          <CartoonBracelet className="h-10 w-10" />
+          <CartoonBracelet className="h-8 w-8 sm:h-10 sm:w-10" />
         </motion.button>
         <AnimatePresence>
           {showHint && (
@@ -76,7 +76,7 @@ export function BraceletLauncher() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto rounded-3xl p-6">
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-sm max-h-[90dvh] overflow-y-auto rounded-3xl p-5 sm:p-6">
           <DialogTitle className="sr-only">Design your own bracelet</DialogTitle>
           <DialogDescription className="sr-only">Tap beads to build a bracelet and share it.</DialogDescription>
           <BraceletDesigner onShopClick={() => setOpen(false)} />

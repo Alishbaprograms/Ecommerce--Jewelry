@@ -23,7 +23,7 @@ export default function EditProductPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-96 w-full" />
@@ -32,7 +32,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Back to Products

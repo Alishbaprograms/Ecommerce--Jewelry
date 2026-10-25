@@ -85,11 +85,12 @@ export function Navbar() {
         {/* Announcement bar */}
         <div
           className={cn(
-            "text-center py-2 text-[11px] tracking-widest transition-colors duration-500",
+            "text-center py-2 px-2 text-[10px] sm:text-[11px] tracking-wide sm:tracking-widest transition-colors duration-500",
             isTransparent ? "bg-black/20 text-white/90" : "bg-foreground text-background"
           )}
         >
-          CASH ON DELIVERY · FREE DELIVERY ON ORDERS OVER RS. 5,000
+          <span className="sm:hidden">CASH ON DELIVERY · FREE DELIVERY OVER RS. 5,000</span>
+          <span className="hidden sm:inline">CASH ON DELIVERY · FREE DELIVERY ON ORDERS OVER RS. 5,000</span>
         </div>
 
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -35,14 +35,11 @@ interface CartState {
   setGiftWrap: (value: boolean) => void;
   setGiftMessage: (message: string) => void;
 
-  get totalItems(): number;
-  get subtotal(): number;
-  get total(): number;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
       isOpen: false,
       couponCode: null,
@@ -98,23 +95,12 @@ export const useCartStore = create<CartState>()(
       setGiftWrap: (value) => set({ giftWrap: value }),
 
       setGiftMessage: (message) => set({ giftMessage: message }),
-
-      get totalItems() {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      },
-
-      get subtotal() {
-        return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      },
-
-      get total() {
-        const state = get();
-        return Math.max(0, state.subtotal - state.couponDiscount);
-      },
     }),
     {
       name: "zohrae-cart",
       version: 2,
+      // The drawer should not reopen by itself after a refresh, so only the basket is saved.
+      partialize: (state) => ({ items: state.items, couponCode: state.couponCode, couponDiscount: state.couponDiscount }) as never,
       // v1 carts had no product slug; drop them rather than show broken links.
       migrate: () => ({ items: [] }) as never,
     }

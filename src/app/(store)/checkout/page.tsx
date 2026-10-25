@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { track } from "@/lib/track";
+import { MAJOR_CITIES, OTHER_CITIES, OTHER_CITY_VALUE } from "@/lib/pakistan-cities";
 import { COUPON_STORAGE_KEY } from "@/components/store/catch-jewels-game";
 
 const checkoutSchema = z.object({
@@ -23,9 +24,14 @@ const checkoutSchema = z.object({
   phone: z.string().trim().min(7, "Please enter a phone number"),
   email: z.string().trim().email("Enter a valid email").optional().or(z.literal("")),
   address: z.string().trim().min(5, "Please enter your full address"),
-  city: z.string().trim().min(2, "Please enter your city"),
+  city: z.string().min(1, "Please choose your city"),
+  otherCity: z.string().trim().optional(),
   postalCode: z.string().trim().optional(),
   notes: z.string().trim().optional(),
+}).superRefine((v, ctx) => {
+  if (v.city === OTHER_CITY_VALUE && (v.otherCity ?? "").trim().length < 2) {
+    ctx.addIssue({ code: "custom", path: ["otherCity"], message: "Please type your city" });
+  }
 });
 
 type CheckoutData = z.infer<typeof checkoutSchema>;
@@ -44,8 +50,10 @@ export default function CheckoutPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<CheckoutData>({ resolver: zodResolver(checkoutSchema) });
+  } = useForm<CheckoutData>({ resolver: zodResolver(checkoutSchema), defaultValues: { city: "" } });
+  const cityChoice = watch("city");
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = calcShipping(subtotal);
@@ -108,7 +116,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
-          customer: values,
+          customer: { ...values, city: values.city === OTHER_CITY_VALUE ? (values.otherCity ?? "").trim() : values.city },
           couponCode: coupon?.code ?? null,
         }),
       });
@@ -244,10 +252,29 @@ export default function CheckoutPage() {
               <h2 className="font-serif text-xl mb-4">Delivery address</h2>
               <div className="space-y-4">
                 <Input label="Full address" autoComplete="street-address" error={errors.address?.message} {...register("address")} />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input label="City" autoComplete="address-level2" error={errors.city?.message} {...register("city")} />
-                  <Input label="Postal code (optional)" autoComplete="postal-code" {...register("postalCode")} />
+                <div>
+                  <label htmlFor="city" className="block text-xs font-semibold text-muted-foreground mb-2">City</label>
+                  <select
+                    id="city"
+                    autoComplete="address-level2"
+                    {...register("city")}
+                    className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-foreground"
+                  >
+                    <option value="">Choose your city</option>
+                    <optgroup label="Major cities">
+                      {MAJOR_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </optgroup>
+                    <optgroup label="Other cities (A–Z)">
+                      {OTHER_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </optgroup>
+                    <option value={OTHER_CITY_VALUE}>My city isn&apos;t listed</option>
+                  </select>
+                  {errors.city?.message && <p className="mt-1.5 text-xs text-destructive">{errors.city.message}</p>}
                 </div>
+                {cityChoice === OTHER_CITY_VALUE && (
+                  <Input label="Type your city" error={errors.otherCity?.message} {...register("otherCity")} />
+                )}
+                <Input label="Postal code (optional)" autoComplete="postal-code" {...register("postalCode")} />
                 <Input label="Order notes (optional)" placeholder="Anything we should know?" {...register("notes")} />
               </div>
             </div>

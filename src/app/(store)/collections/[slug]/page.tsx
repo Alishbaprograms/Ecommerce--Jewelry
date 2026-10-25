@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const name = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " ");
   return {
-    title: `${name} — Shop Fine Jewelry`,
-    description: `Browse our curated selection of fine ${name.toLowerCase()}.`,
+    title: slug === "all" ? "All kids jewelry" : `${name} for kids`,
+    description: `Shop ${slug === "all" ? "kids jewelry" : name.toLowerCase()} from Zohraé. Cash on delivery across Pakistan.`,
   };
 }
 

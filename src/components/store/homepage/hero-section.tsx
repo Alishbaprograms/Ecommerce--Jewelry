@@ -6,11 +6,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 const floaters = [
-  { emoji: "🧲", className: "left-[6%] top-[30%] text-5xl sm:text-6xl", r: "-12deg", delay: "0s" },
-  { emoji: "🌈", className: "right-[8%] top-[28%] text-5xl sm:text-7xl", r: "10deg", delay: "1s" },
-  { emoji: "🎀", className: "left-[14%] bottom-[14%] text-4xl sm:text-5xl", r: "8deg", delay: "2s" },
-  { emoji: "💖", className: "right-[16%] bottom-[16%] text-4xl sm:text-5xl", r: "-8deg", delay: "0.5s" },
-  { emoji: "✨", className: "left-[44%] top-[20%] text-3xl", r: "0deg", delay: "1.5s" },
+  { emoji: "🧲", className: "left-[4%] top-[6%] text-4xl sm:left-[6%] sm:top-[30%] sm:text-6xl", r: "-12deg", delay: "0s" },
+  { emoji: "🌈", className: "right-[5%] top-[5%] text-4xl sm:right-[8%] sm:top-[28%] sm:text-7xl", r: "10deg", delay: "1s" },
+  { emoji: "🎀", className: "hidden sm:block left-[14%] bottom-[14%] sm:text-5xl", r: "8deg", delay: "2s" },
+  { emoji: "💖", className: "hidden sm:block right-[16%] bottom-[16%] sm:text-5xl", r: "-8deg", delay: "0.5s" },
+  { emoji: "✨", className: "hidden sm:block left-[44%] top-[20%] text-3xl", r: "0deg", delay: "1.5s" },
 ];
 
 export function HeroSection() {

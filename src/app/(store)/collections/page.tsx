@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Collections — Zohraé",
-  description: "Browse our full range of fine jewelry collections.",
+  description: "Browse magnetic earrings, bead bracelets, necklaces and more for kids.",
 };
 
 const collectionImages: Record<string, string> = {

@@ -3,7 +3,7 @@
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  // No baseURL: requests go to whatever address the visitor is on, so www/non-www and preview links all work.
 });
 
 export const {

@@ -171,7 +171,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
       }}
       className="space-y-6"
     >
-      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+      <section className="bg-white border border-zinc-200 rounded-xl p-4 sm:p-6 space-y-4">
         <h2 className="font-semibold text-zinc-900">Photos</h2>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           {images.map((url, i) => (
@@ -211,7 +211,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         <p className="text-xs text-zinc-500">The first photo is the main one shown in the shop.</p>
       </section>
 
-      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+      <section className="bg-white border border-zinc-200 rounded-xl p-4 sm:p-6 space-y-4">
         <h2 className="font-semibold text-zinc-900">Details</h2>
         <Field label="Product name">
           <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g. Rainbow Bead Necklace" />
@@ -229,7 +229,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         </Field>
       </section>
 
-      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+      <section className="bg-white border border-zinc-200 rounded-xl p-4 sm:p-6 space-y-4">
         <h2 className="font-semibold text-zinc-900">Price</h2>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Price (Rs.)">
@@ -241,7 +241,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         </div>
       </section>
 
-      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+      <section className="bg-white border border-zinc-200 rounded-xl p-4 sm:p-6 space-y-4">
         <h2 className="font-semibold text-zinc-900">Stock</h2>
         {!hasOptions ? (
           <Field label="How many in stock?">
@@ -249,20 +249,20 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
           </Field>
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-12 gap-2 text-xs text-zinc-500">
+            <div className="hidden sm:grid grid-cols-12 gap-2 text-xs text-zinc-500">
               <span className="col-span-5">Option (e.g. Pink, Blue)</span>
               <span className="col-span-3">Price (optional)</span>
               <span className="col-span-3">Stock</span>
             </div>
             {variants.map((v, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                <input className={`${inputCls} col-span-5`} value={v.name} placeholder="Pink"
+              <div key={i} className="grid grid-cols-6 sm:grid-cols-12 gap-2 items-center rounded-lg border border-zinc-100 p-2 sm:border-0 sm:p-0">
+                <input className={`${inputCls} col-span-6 sm:col-span-5`} value={v.name} placeholder="Option, e.g. Pink"
                   onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                <input type="number" min="0" className={`${inputCls} col-span-3`} value={v.price} placeholder="Same"
+                <input type="number" min="0" className={`${inputCls} col-span-3`} value={v.price} placeholder="Price (same)"
                   onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} />
-                <input type="number" min="0" className={`${inputCls} col-span-3`} value={v.stock}
+                <input type="number" min="0" className={`${inputCls} col-span-2 sm:col-span-3`} placeholder="Stock" value={v.stock}
                   onChange={(e) => setVariants((all) => all.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)))} />
-                <button type="button" className="col-span-1 text-zinc-400 hover:text-red-600 flex justify-center"
+                <button type="button" className="col-span-1 text-zinc-400 hover:text-red-600 flex justify-center p-2"
                   onClick={() => setVariants((all) => all.filter((_, j) => j !== i))} aria-label="Remove option">
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -279,7 +279,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         </label>
       </section>
 
-      <section className="bg-white border border-zinc-200 rounded-xl p-6 space-y-3">
+      <section className="bg-white border border-zinc-200 rounded-xl p-4 sm:p-6 space-y-3">
         <h2 className="font-semibold text-zinc-900">Show in shop</h2>
         {check("Visible in the shop (untick to hide it)", visible, setVisible)}
         {check("Mark as New", isNewArrival, setIsNewArrival)}

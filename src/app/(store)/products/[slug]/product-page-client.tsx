@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { track } from "@/lib/track";
+import { FREE_SHIPPING_OVER, SHIPPING_FLAT } from "@/lib/shop-config";
 import Image from "next/image";
 import { TreasureChest } from "@/components/store/treasure-chest";
 import Link from "next/link";
@@ -15,8 +16,8 @@ import {
   Share2,
   Gift,
   Truck,
-  Shield,
-  RotateCcw,
+  Banknote,
+  PhoneCall,
   ChevronDown,
 } from "lucide-react";
 import { formatPrice, cn, isLowStock, isInStock } from "@/lib/utils";
@@ -93,7 +94,7 @@ const accordionItems = [
   },
   {
     id: "shipping",
-    label: "Shipping & Returns",
+    label: "Delivery",
     icon: null,
   },
 ];
@@ -156,9 +157,6 @@ export function ProductPageClient({ product }: Props) {
       sku: selectedVariant.sku,
       quantity,
       engravingText: engravingText || undefined,
-    });
-    toast.success("Added to your treasure box", {
-      description: `${product.name} — ${formatPrice(price)}`,
     });
     setTimeout(() => setIsAddingToCart(false), 600);
   }
@@ -459,7 +457,7 @@ export function ProductPageClient({ product }: Props) {
               <Button
                 onClick={handleAddToCart}
                 size="xl"
-                className="flex-1"
+                className="flex-1 min-w-0 px-4 sm:px-8"
                 loading={isAddingToCart}
                 disabled={!inStock || !selectedVariant}
               >
@@ -475,7 +473,7 @@ export function ProductPageClient({ product }: Props) {
                   slug: product.slug,
                 })}
                 className={cn(
-                  "p-4 border border-border hover:border-foreground transition-colors",
+                  "shrink-0 p-3 sm:p-4 rounded-xl border border-border hover:border-foreground transition-colors",
                   inWishlist && "bg-foreground text-background border-foreground"
                 )}
                 aria-label="Add to wishlist"
@@ -484,7 +482,7 @@ export function ProductPageClient({ product }: Props) {
               </button>
               <button
                 onClick={handleShare}
-                className="p-4 border border-border hover:border-foreground transition-colors"
+                className="shrink-0 p-3 sm:p-4 rounded-xl border border-border hover:border-foreground transition-colors"
                 aria-label="Share"
               >
                 <Share2 className="h-5 w-5" />
@@ -494,9 +492,9 @@ export function ProductPageClient({ product }: Props) {
             {/* Trust signals */}
             <div className="grid grid-cols-3 gap-4 py-6 border-t border-border">
               {[
-                { Icon: Truck, label: "Free Shipping", sub: "On orders over Rs. 50,000" },
-                { Icon: Shield, label: "Certified", sub: "Ethically sourced" },
-                { Icon: RotateCcw, label: "30 Day Returns", sub: "Hassle free" },
+                { Icon: Truck, label: "Delivered in Pakistan", sub: `Free over Rs. ${FREE_SHIPPING_OVER.toLocaleString("en-PK")}` },
+                { Icon: Banknote, label: "Cash on delivery", sub: "Pay when it arrives" },
+                { Icon: PhoneCall, label: "We call to confirm", sub: "Before it ships" },
               ].map(({ Icon, label, sub }) => (
                 <div key={label} className="text-center">
                   <Icon className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground" strokeWidth={1.5} />
@@ -546,14 +544,14 @@ export function ProductPageClient({ product }: Props) {
                           )}
                           {item.id === "care" && (
                             <p>
-                              {product.careInstructions ?? "Store in a soft pouch or jewelry box. Avoid contact with harsh chemicals, perfumes, and lotions. Clean with a soft, dry cloth after each wear."}
+                              {product.careInstructions ?? "Keep away from water, perfume and lotions, and wipe with a soft dry cloth. Take it off before swimming or sleeping, and store it in a small pouch."}
                             </p>
                           )}
                           {item.id === "shipping" && (
                             <>
-                              <p>Free standard shipping on orders over Rs. 50,000.</p>
-                              <p>Express shipping available at checkout.</p>
-                              <p>We accept returns within 30 days of delivery for unworn items in original condition.</p>
+                              <p>Cash on delivery across Pakistan: pay in cash when your order arrives.</p>
+                              <p>Delivery is Rs. {SHIPPING_FLAT}, and free on orders of Rs. {FREE_SHIPPING_OVER.toLocaleString("en-PK")} or more.</p>
+                              <p>We call to confirm every order before it ships. Questions? Message us on WhatsApp.</p>
                             </>
                           )}
                         </div>
