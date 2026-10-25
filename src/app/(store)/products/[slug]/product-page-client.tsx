@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { TreasureChest } from "@/components/store/treasure-chest";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
-  ShoppingBag,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -151,7 +151,7 @@ export function ProductPageClient({ product }: Props) {
       quantity,
       engravingText: engravingText || undefined,
     });
-    toast.success("Added to bag", {
+    toast.success("Added to your treasure box", {
       description: `${product.name} — ${formatPrice(price)}`,
     });
     setTimeout(() => setIsAddingToCart(false), 600);
@@ -457,8 +457,8 @@ export function ProductPageClient({ product }: Props) {
                 loading={isAddingToCart}
                 disabled={!inStock || !selectedVariant}
               >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                {inStock ? "Add to Bag" : "Out of Stock"}
+                <TreasureChest className="h-5 w-5 mr-2" open />
+                {inStock ? "Add to Treasure Box" : "Out of Stock"}
               </Button>
               <button
                 onClick={() => toggleItem({

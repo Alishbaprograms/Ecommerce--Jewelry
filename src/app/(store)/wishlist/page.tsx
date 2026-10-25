@@ -75,7 +75,7 @@ export default function WishlistPage() {
                       toast.info("Please visit the product page to add to bag");
                     }}
                   >
-                    Add to Bag
+                    Add to Treasure Box
                   </Button>
                 </motion.div>
               ))}

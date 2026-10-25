@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Heart,
-  ShoppingBag,
   User,
   Menu,
   X,
@@ -19,6 +18,7 @@ import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { TreasureChest } from "@/components/store/treasure-chest";
 
 type NavLink = { label: string; href: string; children?: { label: string; href: string }[] };
 
@@ -201,9 +201,16 @@ export function Navbar() {
                   "relative p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
                 )}
-                aria-label="Cart"
+                aria-label="Open your treasure box (cart)"
               >
-                <ShoppingBag className="h-4.5 w-4.5" />
+                <motion.span
+                  key={totalCartItems}
+                  animate={{ rotate: [0, -12, 12, -8, 8, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.6 }}
+                  className="block"
+                >
+                  <TreasureChest className="h-6 w-6" open={totalCartItems > 0} />
+                </motion.span>
                 {totalCartItems > 0 && (
                   <motion.span
                     key={totalCartItems}

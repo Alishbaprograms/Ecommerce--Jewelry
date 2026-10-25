@@ -191,7 +191,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               ? "Adding..."
               : !defaultVariant || (product.variants?.length ?? 0) > 1
               ? "Choose options"
-              : "Add to cart"}
+              : "Add to treasure box"}
           </button>
         </div>
       </div>

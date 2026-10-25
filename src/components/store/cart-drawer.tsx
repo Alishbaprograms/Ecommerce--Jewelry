@@ -4,11 +4,13 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import { calcShipping } from "@/lib/shop-config";
 import { Button } from "@/components/ui/button";
+import { TreasureChest } from "@/components/store/treasure-chest";
+import { CatchJewelsGame } from "@/components/store/catch-jewels-game";
 import { Separator } from "@/components/ui/separator";
 
 export function CartDrawer() {
@@ -45,9 +47,9 @@ export function CartDrawer() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
+                <TreasureChest className="h-6 w-6" open={items.length > 0} />
                 <span className="font-serif text-lg">
-                  Your Cart
+                  Your Treasure Box
                 </span>
                 {totalItems > 0 && (
                   <span className="text-muted-foreground text-sm">({totalItems})</span>
@@ -66,9 +68,9 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4 px-8 text-center">
-                  <ShoppingBag className="h-12 w-12 text-muted-foreground/30" strokeWidth={1} />
+                  <TreasureChest className="h-16 w-16 opacity-60" />
                   <div>
-                    <p className="font-serif text-lg mb-1">Your cart is empty</p>
+                    <p className="font-serif text-lg mb-1">Your treasure box is empty</p>
                     <p className="text-sm text-muted-foreground">
                       Find something sparkly for your little one
                     </p>
@@ -76,6 +78,10 @@ export function CartDrawer() {
                   <Button asChild onClick={closeCart} className="mt-2">
                     <Link href="/collections">Shop Now</Link>
                   </Button>
+                  <div className="w-full mt-4">
+                    <p className="text-sm font-medium mb-2">🎮 Play while you pick!</p>
+                    <CatchJewelsGame />
+                  </div>
                 </div>
               ) : (
                 <div className="p-6 space-y-6">
