@@ -9,6 +9,7 @@ import {
   Package,
   ShoppingCart,
   Tag,
+  Ticket,
   Archive,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,7 @@ const navItems = [
   { label: "Products", icon: Package, href: "/admin/products" },
   { label: "Categories", icon: Tag, href: "/admin/categories" },
   { label: "Inventory", icon: Archive, href: "/admin/inventory" },
+  { label: "Discount codes", icon: Ticket, href: "/admin/codes" },
 ];
 
 export function AdminSidebar() {

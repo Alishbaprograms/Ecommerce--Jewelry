@@ -35,6 +35,7 @@ export function CatchJewelsGame() {
   const [phase, setPhase] = useState<"idle" | "playing" | "done">("idle");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const level = Math.min(5, 1 + Math.floor((ROUND_SECONDS - timeLeft) / (ROUND_SECONDS / 5)));
   const [best, setBest] = useState(0);
   const [reward, setReward] = useState<Reward | null>(null);
   const [rewardMsg, setRewardMsg] = useState("");
@@ -165,12 +166,13 @@ export function CatchJewelsGame() {
       g.spawnIn -= dt;
       if (g.spawnIn <= 0) {
         const elapsed = ROUND_SECONDS - g.timeLeft;
-        g.spawnIn = Math.max(0.35, 0.8 - elapsed * 0.012);
+        // Starts easy (a gem every ~1s, falling gently) and ramps up to a gem every 0.3s falling fast.
+        g.spawnIn = Math.max(0.3, 1.0 - elapsed * 0.0165);
         const size = 26 + Math.random() * 8;
         g.gems.push({
           x: size + Math.random() * (g.width - size * 2),
           y: -size,
-          vy: 90 + Math.random() * 50 + elapsed * 3,
+          vy: 70 + Math.random() * 40 + elapsed * 4.2,
           emoji: GEMS[Math.floor(Math.random() * GEMS.length)],
           size,
         });
@@ -256,7 +258,7 @@ export function CatchJewelsGame() {
       </p>
       <div className="flex items-center justify-between text-sm font-medium mb-2 px-1">
         <span>⭐ {score}</span>
-        <span>⏱ {timeLeft}s</span>
+        <span>⏱ {timeLeft}s · Level {level}</span>
         <span className="text-muted-foreground">Best {best}</span>
       </div>
       <div ref={wrapRef} className="relative overflow-hidden rounded-xl bg-white/60">

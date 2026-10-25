@@ -3,15 +3,16 @@ import { randomInt } from "crypto";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { readGameToken } from "@/lib/game-token";
-import { COUPON_VALID_DAYS, MAX_POSSIBLE_CATCHES, ROUND_SECONDS, tierFor } from "@/lib/shop-config";
+import { COUPON_VALID_DAYS, COUPON_WORDS, MAX_POSSIBLE_CATCHES, ROUND_SECONDS, tierFor } from "@/lib/shop-config";
 
 const COOKIE = "zohrae_reward";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no look-alike characters (0/O, 1/I)
 
-function newCode() {
+// e.g. SPARKLE-200-K7M2X. The amount in the code is only for show; the real discount is always read from the database.
+function newCode(discount: number) {
   let s = "";
-  for (let i = 0; i < 6; i++) s += ALPHABET[randomInt(ALPHABET.length)];
-  return `ZOH-${s}`;
+  for (let i = 0; i < 5; i++) s += ALPHABET[randomInt(ALPHABET.length)];
+  return `${COUPON_WORDS[randomInt(COUPON_WORDS.length)]}-${discount}-${s}`;
 }
 
 type Saved = { code: string; discount: number; minSpend: number; expiresAt: string; tier: string };
@@ -50,17 +51,26 @@ export async function POST(request: NextRequest) {
   }
 
   const expiresAt = new Date(Date.now() + COUPON_VALID_DAYS * 86400_000);
-  const coupon = await db.coupon.create({
-    data: {
-      code: newCode(),
-      description: nonce,
-      type: "FIXED",
-      value: tier.discount,
-      minimumAmount: tier.minSpend,
-      usageLimit: 1,
-      expiresAt,
-    },
-  });
+  // The database enforces uniqueness of `code`; on the (very unlikely) clash, just draw a new one.
+  let coupon;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      coupon = await db.coupon.create({
+        data: {
+          code: newCode(tier.discount),
+          description: nonce,
+          type: "FIXED",
+          value: tier.discount,
+          minimumAmount: tier.minSpend,
+          usageLimit: 1,
+          expiresAt,
+        },
+      });
+      break;
+    } catch (e) {
+      if (attempt >= 4 || (e as { code?: string }).code !== "P2002") throw e;
+    }
+  }
 
   const saved: Saved = {
     code: coupon.code,

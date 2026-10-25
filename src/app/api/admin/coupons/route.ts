@@ -18,6 +18,7 @@ export async function GET() {
 
   const coupons = await db.coupon.findMany({
     orderBy: { createdAt: "desc" },
+    include: { orders: { select: { id: true, orderNumber: true } } },
   });
 
   return NextResponse.json({ coupons: JSON.parse(JSON.stringify(coupons, (_, v) =>
