@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const collectionImages: Record<string, string> = {
-  "magnetic-earrings": "/categories/magnetic-earrings-blend3.jpg",
+  "magnetic-earrings": "/categories/magnetic-earrings-clean4.jpg",
   rings: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80",
   necklaces: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80",
   earrings: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",

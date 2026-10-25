@@ -108,7 +108,7 @@ export function Navbar() {
             <Link
               href="/"
               className={cn(
-                "font-serif text-xl tracking-[0.25em] uppercase font-light absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 transition-colors duration-300",
+                "font-serif text-lg sm:text-xl tracking-[0.18em] sm:tracking-[0.25em] uppercase font-light flex-1 text-center lg:flex-none lg:text-left transition-colors duration-300",
                 isTransparent ? "text-white" : "text-foreground"
               )}
             >
@@ -166,27 +166,27 @@ export function Navbar() {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center sm:gap-2">
               <Link
                 href="/search"
                 className={cn(
-                  "p-2 transition-colors",
+                  "p-1.5 sm:p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
                 )}
                 aria-label="Search"
               >
-                <CartoonSearch className="h-7 w-7" />
+                <CartoonSearch className="h-6 w-6 sm:h-7 sm:w-7" />
               </Link>
 
               <Link
                 href="/wishlist"
                 className={cn(
-                  "relative p-2 transition-colors",
+                  "relative p-1.5 sm:p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
                 )}
                 aria-label="Wishlist"
               >
-                <CartoonHeart className="h-7 w-7" />
+                <CartoonHeart className="h-6 w-6 sm:h-7 sm:w-7" />
                 {wishlistItems.length > 0 && (
                   <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-foreground text-background text-[9px] flex items-center justify-center font-medium">
                     {wishlistItems.length}
@@ -197,12 +197,12 @@ export function Navbar() {
               <Link
                 href={session ? "/account" : "/login"}
                 className={cn(
-                  "p-2 transition-colors",
+                  "p-1.5 sm:p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
                 )}
                 aria-label="Account"
               >
-                <CartoonUser className="h-7 w-7" />
+                <CartoonUser className="h-6 w-6 sm:h-7 sm:w-7" />
               </Link>
 
               <button
@@ -211,7 +211,7 @@ export function Navbar() {
                   openCart();
                 }}
                 className={cn(
-                  "relative p-2 transition-colors",
+                  "relative p-1.5 sm:p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
                 )}
                 aria-label="Open your treasure box (cart)"
@@ -227,7 +227,7 @@ export function Navbar() {
                     transition={shaking ? { duration: 0.7, repeat: 3, ease: "easeInOut" } : { duration: 0.2 }}
                     className="block origin-bottom"
                   >
-                    <TreasureChest className="h-7 w-7" open={totalCartItems > 0 || showHint} />
+                    <TreasureChest className="h-6 w-6 sm:h-7 sm:w-7" open={totalCartItems > 0 || showHint} />
                   </motion.span>
                 </motion.span>
                 <AnimatePresence>
