@@ -4,21 +4,15 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Heart,
-  User,
-  Menu,
-  X,
-  ChevronDown,
-} from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { TreasureChest } from "@/components/store/treasure-chest";
+import { CartoonClose, CartoonHeart, CartoonMenu, CartoonSearch, CartoonUser } from "@/components/store/cartoon-icons";
 
 type NavLink = { label: string; href: string; children?: { label: string; href: string }[] };
 
@@ -56,6 +50,22 @@ export function Navbar() {
 
   const totalCartItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
+  // On arrival the chest shakes and a bubble invites people to open it and play the game.
+  const reduceMotion = useReducedMotion();
+  const [shaking, setShaking] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => {
+        setShowHint(true);
+        setShaking(!reduceMotion);
+      }, 1500),
+      setTimeout(() => setShaking(false), 4200),
+      setTimeout(() => setShowHint(false), 9000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [reduceMotion]);
+
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
@@ -91,7 +101,7 @@ export function Navbar() {
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileOpen ? <CartoonClose className="h-7 w-7" /> : <CartoonMenu className="h-7 w-7" />}
             </button>
 
             {/* Logo */}
@@ -165,7 +175,7 @@ export function Navbar() {
                 )}
                 aria-label="Search"
               >
-                <Search className="h-4.5 w-4.5" />
+                <CartoonSearch className="h-7 w-7" />
               </Link>
 
               <Link
@@ -176,7 +186,7 @@ export function Navbar() {
                 )}
                 aria-label="Wishlist"
               >
-                <Heart className="h-4.5 w-4.5" />
+                <CartoonHeart className="h-7 w-7" />
                 {wishlistItems.length > 0 && (
                   <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-foreground text-background text-[9px] flex items-center justify-center font-medium">
                     {wishlistItems.length}
@@ -192,11 +202,14 @@ export function Navbar() {
                 )}
                 aria-label="Account"
               >
-                <User className="h-4.5 w-4.5" />
+                <CartoonUser className="h-7 w-7" />
               </Link>
 
               <button
-                onClick={openCart}
+                onClick={() => {
+                  setShowHint(false);
+                  openCart();
+                }}
                 className={cn(
                   "relative p-2 transition-colors",
                   isTransparent ? "text-white/90 hover:text-white" : "text-foreground/70 hover:text-foreground"
@@ -209,8 +222,27 @@ export function Navbar() {
                   transition={{ duration: 0.6 }}
                   className="block"
                 >
-                  <TreasureChest className="h-6 w-6" open={totalCartItems > 0} />
+                  <motion.span
+                    animate={shaking ? { rotate: [0, -16, 16, -12, 12, -8, 8, 0] } : { rotate: 0 }}
+                    transition={shaking ? { duration: 0.7, repeat: 3, ease: "easeInOut" } : { duration: 0.2 }}
+                    className="block origin-bottom"
+                  >
+                    <TreasureChest className="h-7 w-7" open={totalCartItems > 0 || showHint} />
+                  </motion.span>
                 </motion.span>
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -6, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-2xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-lg"
+                    >
+                      <span className="absolute -top-1 right-4 h-2.5 w-2.5 rotate-45 bg-primary" />
+                      Open me for surprises! 🎁
+                    </motion.span>
+                  )}
+                </AnimatePresence>
                 {totalCartItems > 0 && (
                   <motion.span
                     key={totalCartItems}
