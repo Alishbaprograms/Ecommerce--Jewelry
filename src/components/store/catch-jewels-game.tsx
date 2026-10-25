@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/track";
 import { REWARD_TIERS, ROUND_SECONDS } from "@/lib/shop-config";
 
 const GEMS = ["💎", "💍", "✨", "🔮", "⭐", "🌸"];
@@ -133,6 +134,7 @@ export function CatchJewelsGame() {
     cancelAnimationFrame(raf.current);
     setPhase("done");
     setScore(g.score);
+    track("game_end", { score: g.score });
     setBest((prev) => {
       const next = Math.max(prev, g.score);
       try {
@@ -212,6 +214,7 @@ export function CatchJewelsGame() {
     setScore(0);
     setTimeLeft(ROUND_SECONDS);
     setPhase("playing");
+    track("game_start");
     setReward(null);
     setRewardMsg("");
     tokenRef.current = null;

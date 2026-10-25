@@ -1,5 +1,6 @@
 import React from "react";
-import { WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shop-config";
+import { WHATSAPP_DISPLAY } from "@/lib/shop-config";
+import { WhatsAppLink } from "@/components/store/whatsapp-link";
 import Link from "next/link";
 
 const shopLinks = [
@@ -43,14 +44,13 @@ export function Footer() {
               <li>Delivered across Pakistan</li>
               <li>We call to confirm every order</li>
               <li>
-                <a
-                  href={whatsappLink("Hi Zohraé! I have a question.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <WhatsAppLink
+                  where="footer"
+                  message="Hi Zohraé! I have a question."
                   className="underline hover:text-white"
                 >
                   WhatsApp us: {WHATSAPP_DISPLAY}
-                </a>
+                </WhatsAppLink>
               </li>
             </ul>
           </div>

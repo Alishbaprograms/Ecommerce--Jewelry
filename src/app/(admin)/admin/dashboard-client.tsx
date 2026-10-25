@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -17,6 +18,9 @@ import { Badge } from "@/components/ui/badge";
 
 interface Props {
   stats: {
+    gamesToday: number;
+    codesWonToday: number;
+    codesUsedTotal: number;
     todayOrders: number;
     todayRevenue: number;
     monthOrders: number;
@@ -281,7 +285,19 @@ export function AdminDashboardClient({ stats }: Props) {
         </motion.div>
       </div>
 
-      {/* Alerts */}
+      {/* Games summary: kept to one thin strip so the sales numbers above stay uncluttered */}
+      <Link
+        href="/admin/insights"
+        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm hover:bg-zinc-50 transition-colors"
+      >
+        <span className="font-medium text-zinc-900">Games today</span>
+        <span className="flex flex-wrap gap-x-6 gap-y-1 text-zinc-600">
+          <span><strong className="text-zinc-900">{stats.gamesToday}</strong> rounds played</span>
+          <span><strong className="text-zinc-900">{stats.codesWonToday}</strong> codes won</span>
+          <span><strong className="text-zinc-900">{stats.codesUsedTotal}</strong> codes used so far</span>
+        </span>
+        <span className="text-zinc-500">See insights →</span>
+      </Link>
     </div>
   );
 }

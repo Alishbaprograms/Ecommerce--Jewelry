@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { track } from "@/lib/track";
 import { COUPON_STORAGE_KEY } from "@/components/store/catch-jewels-game";
 
 const checkoutSchema = z.object({
@@ -73,6 +74,11 @@ export default function CheckoutPage() {
       setCheckingCoupon(false);
     }
   }
+
+  useEffect(() => {
+    if (items.length > 0) track("checkout_start", { items: items.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // A code won in the game is filled in automatically.
   useEffect(() => {

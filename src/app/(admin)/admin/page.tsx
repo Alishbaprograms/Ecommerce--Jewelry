@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { AdminDashboardClient } from "./dashboard-client";
+import { startOfPktDay } from "@/lib/insights";
 import { startOfDay, startOfMonth, subDays, subMonths } from "date-fns";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -57,7 +58,18 @@ async function getDashboardStats() {
     }),
   ]);
 
+  // Small games summary for the dashboard strip; the full picture lives on the Insights page.
+  const pktToday = startOfPktDay();
+  const [gamesToday, codesWonToday, codesUsedTotal] = await Promise.all([
+    db.analyticsEvent.count({ where: { name: "game_start", createdAt: { gte: pktToday } } }),
+    db.coupon.count({ where: { description: { startsWith: "game:" }, createdAt: { gte: pktToday } } }),
+    db.coupon.count({ where: { description: { startsWith: "game:" }, usageCount: { gt: 0 } } }),
+  ]);
+
   return {
+    gamesToday,
+    codesWonToday,
+    codesUsedTotal,
     todayOrders,
     todayRevenue: Number(todayRevenue._sum.total ?? 0),
     monthOrders,

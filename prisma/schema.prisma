@@ -892,3 +892,18 @@ model AbandonedCart {
   @@index([email])
   @@index([recovered])
 }
+
+// ─── Insights ─────────────────────────────────────────────────────────────────
+// Anonymous usage events (game plays, bracelet designer, button taps, shopping funnel).
+// `sessionId` is a random id kept in the visitor's browser; no names, phones or emails are stored here.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  sessionId String
+  props     Json?
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+  @@index([sessionId])
+}

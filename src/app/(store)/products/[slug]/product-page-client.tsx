@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import Image from "next/image";
 import { TreasureChest } from "@/components/store/treasure-chest";
 import Link from "next/link";
@@ -134,8 +135,13 @@ export function ProductPageClient({ product }: Props) {
     });
   });
 
+  useEffect(() => {
+    track("product_view", { slug: product.slug });
+  }, [product.slug]);
+
   function handleAddToCart() {
     if (!selectedVariant || !inStock) return;
+    track("add_to_cart", { slug: product.slug });
     setIsAddingToCart(true);
     addItem({
       id: selectedVariant.id,

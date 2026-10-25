@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, Truck, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { whatsappLink } from "@/lib/shop-config";
+import { WhatsAppLink } from "@/components/store/whatsapp-link";
 import dynamic from "next/dynamic";
 
 const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
@@ -85,14 +85,13 @@ function OrderConfirmationContent() {
 
           <p className="text-sm text-muted-foreground mb-6">
             Questions about your order?{" "}
-            <a
-              href={whatsappLink(`Hi Zohraé! I have a question about my order ${orderNumber ?? ""}`.trim())}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
+              where="order_confirmation"
+              message={`Hi Zohraé! I have a question about my order ${orderNumber ?? ""}`.trim()}
               className="font-medium text-foreground underline"
             >
               Message us on WhatsApp
-            </a>
+            </WhatsAppLink>
           </p>
 
           <div className="flex gap-4 justify-center">

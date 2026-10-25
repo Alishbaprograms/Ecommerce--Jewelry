@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/track";
 import { TreasureChest } from "@/components/store/treasure-chest";
 import { CartoonClose, CartoonHeart, CartoonMenu, CartoonSearch, CartoonUser } from "@/components/store/cartoon-icons";
 
@@ -59,6 +60,7 @@ export function Navbar() {
       setTimeout(() => {
         setShowHint(true);
         setShaking(!reduceMotion);
+        track("chest_hint_shown");
       }, 1500),
       setTimeout(() => setShaking(false), 4200),
       setTimeout(() => setShowHint(false), 9000),
@@ -207,6 +209,7 @@ export function Navbar() {
 
               <button
                 onClick={() => {
+                  track("chest_click", { hint: showHint });
                   setShowHint(false);
                   openCart();
                 }}

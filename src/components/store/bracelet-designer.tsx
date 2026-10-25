@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Check, Copy, Undo2 } from "lucide-react";
 import { whatsappLink } from "@/lib/shop-config";
+import { track } from "@/lib/track";
 import { Button } from "@/components/ui/button";
 import { BEADS, MAX_BEADS, decodeBracelet, encodeBracelet, type Bead } from "@/lib/bracelet";
 import { BeadShape, BraceletView } from "@/components/store/bracelet-view";
@@ -21,12 +22,20 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
     setBeads((prev) => (prev.length >= MAX_BEADS ? prev : [...prev, bead]));
   }
 
+  function finish() {
+    track("bracelet_done", { beads: encodeBracelet(beads), count: beads.length });
+    setDone(true);
+  }
+
   function sendWhatsApp() {
+    track("bracelet_whatsapp");
     const text = `Look at the bracelet I designed at Zohraé! 💖 ${shareUrl(beads)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   }
 
   function sendToZohrae() {
+    track("bracelet_ask");
+    track("whatsapp_click", { where: "bracelet" });
     window.open(
       whatsappLink(`Hi Zohraé! My little one designed this bracelet 💖 ${shareUrl(beads)} Can you make it?`),
       "_blank",
@@ -35,6 +44,7 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
   }
 
   async function copyLink() {
+    track("bracelet_copy");
     try {
       await navigator.clipboard.writeText(shareUrl(beads));
       setCopied(true);
@@ -53,7 +63,7 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
         <div className="flex flex-col gap-2">
           <Button size="lg" onClick={sendWhatsApp}>Send to WhatsApp</Button>
           <Button size="lg" variant="secondary" onClick={sendToZohrae}>Ask Zohraé to make this</Button>
-          <Button asChild size="lg" variant="outline" onClick={onShopClick}>
+          <Button asChild size="lg" variant="outline" onClick={() => { track("bracelet_shop"); onShopClick?.(); }}>
             <Link href="/collections/bead-bracelets">Shop bead bracelets</Link>
           </Button>
           <div className="flex gap-2 justify-center pt-1">
@@ -99,7 +109,7 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
         <Button variant="outline" size="sm" onClick={() => setBeads((p) => p.slice(0, -1))} disabled={!beads.length}>
           <Undo2 className="h-4 w-4 mr-1" /> Undo
         </Button>
-        <Button size="lg" onClick={() => setDone(true)} disabled={beads.length < 3}>
+        <Button size="lg" onClick={finish} disabled={beads.length < 3}>
           Show my mum
         </Button>
       </div>

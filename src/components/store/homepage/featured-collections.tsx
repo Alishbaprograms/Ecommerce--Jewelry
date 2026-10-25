@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { track } from "@/lib/track";
 
 const categories: { name: string; slug: string; emoji: string; image?: string; note: string; bg: string }[] = [
   { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", image: "/categories/magnetic-earrings-clean4.jpg", note: "Clip-on, no piercing", bg: "bg-blush" },
@@ -40,6 +41,7 @@ export function FeaturedCollections() {
           >
             <Link
               href={`/collections/${c.slug}`}
+              onClick={() => track("category_tile_click", { slug: c.slug })}
               className={`group flex h-full flex-col items-center text-center rounded-3xl ${c.bg} px-3 py-6 sm:py-8 transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
             >
               {/* Same-height media area for every tile, so titles line up and photos can fill it. */}

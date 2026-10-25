@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { BraceletDesigner } from "@/components/store/bracelet-designer";
+import { track } from "@/lib/track";
 import { CartoonBracelet } from "@/components/store/cartoon-icons";
 
 const HIDDEN_ON = ["/checkout", "/order-confirmation"];
@@ -27,6 +28,7 @@ export function BraceletLauncher() {
       setTimeout(() => {
         setBounce(!reduceMotion);
         setShowHint(true);
+        track("bracelet_hint_shown");
         try {
           sessionStorage.setItem("zohrae-bracelet-bounced", "1");
         } catch {}
@@ -44,6 +46,7 @@ export function BraceletLauncher() {
       <div className="fixed left-3 bottom-4 sm:left-4 sm:bottom-6 z-30 flex items-center gap-2">
         <motion.button
           onClick={() => {
+            track("bracelet_open", { hint: showHint });
             setShowHint(false);
             setOpen(true);
           }}

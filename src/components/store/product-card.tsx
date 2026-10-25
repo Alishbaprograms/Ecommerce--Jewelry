@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Heart, ShoppingBag, Star, Eye } from "lucide-react";
 import { formatPrice, getDiscountPercentage, cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
+import { track } from "@/lib/track";
 import { useWishlistStore } from "@/store/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       return;
     }
     setAddingToCart(true);
+    track("add_to_cart", { slug: product.slug });
     const price = parseFloat(String(defaultVariant.price));
     addItem({
       id: defaultVariant.id,
