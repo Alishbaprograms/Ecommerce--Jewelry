@@ -2,11 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 
-const categories = [
-  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", note: "Clip-on, no piercing", bg: "bg-blush" },
+const categories: { name: string; slug: string; emoji: string; image?: string; note: string; bg: string }[] = [
+  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", image: "/categories/magnetic-earrings-strawberry.jpg", note: "Clip-on, no piercing", bg: "bg-blush" },
   { name: "Bead Bracelets", slug: "bead-bracelets", emoji: "🌈", note: "Colourful & stretchy", bg: "bg-butter" },
   { name: "Bead Necklaces", slug: "bead-necklaces", emoji: "🌸", note: "Sweet little strands", bg: "bg-lilac" },
   { name: "Hair Clips", slug: "hair-accessories", emoji: "🎀", note: "Clips, bows & bands", bg: "bg-mint" },
@@ -41,9 +42,15 @@ export function FeaturedCollections() {
               href={`/collections/${c.slug}`}
               className={`group flex flex-col items-center text-center rounded-3xl ${c.bg} px-3 py-7 sm:py-9 transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
             >
-              <span className="text-5xl sm:text-6xl mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" aria-hidden>
-                {c.emoji}
-              </span>
+              {c.image ? (
+                <span className="relative mb-3 block h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-2xl ring-2 ring-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                  <Image src={c.image} alt={c.name} fill sizes="112px" className="object-cover" />
+                </span>
+              ) : (
+                <span className="text-5xl sm:text-6xl mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" aria-hidden>
+                  {c.emoji}
+                </span>
+              )}
               <h3 className="text-base sm:text-lg font-semibold">{c.name}</h3>
               <p className="text-xs text-muted-foreground mt-1">{c.note}</p>
             </Link>
