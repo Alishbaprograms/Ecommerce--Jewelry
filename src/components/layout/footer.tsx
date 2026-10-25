@@ -39,9 +39,9 @@ export function Footer() {
           <div>
             <h3 className="text-sm font-semibold mb-4 text-white/60">Ordering</h3>
             <ul className="space-y-2.5 text-sm text-white/80">
-              <li>💵 Cash on delivery</li>
-              <li>🚚 Delivered across Pakistan</li>
-              <li>📞 We call to confirm every order</li>
+              <li>Cash on delivery</li>
+              <li>Delivered across Pakistan</li>
+              <li>We call to confirm every order</li>
               <li>
                 <a
                   href={whatsappLink("Hi Zohraé! I have a question.")}
@@ -49,7 +49,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="underline hover:text-white"
                 >
-                  💬 WhatsApp us: {WHATSAPP_DISPLAY}
+                  WhatsApp us: {WHATSAPP_DISPLAY}
                 </a>
               </li>
             </ul>
