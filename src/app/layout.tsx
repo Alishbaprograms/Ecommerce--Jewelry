@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import { Chewy, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -7,8 +7,9 @@ import { CartDrawer } from "@/components/store/cart-drawer";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const fredoka = Fredoka({
-  variable: "--font-fredoka",
+const chewy = Chewy({
+  variable: "--font-chewy",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -55,7 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fredoka.variable} ${nunito.variable} font-sans antialiased`}>
+      <body className={`${chewy.variable} ${nunito.variable} font-sans antialiased`}>
         <Providers>
           {children}
           <Toaster

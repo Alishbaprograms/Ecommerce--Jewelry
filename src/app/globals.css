@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
   --color-background: #fffaf5;
   --color-foreground: #2b2540;
   --color-card: #ffffff;
@@ -31,7 +31,7 @@
   --color-butter: #fff2c4;
   --color-sky: #dff0ff;
 
-  --font-serif: var(--font-fredoka), "Trebuchet MS", system-ui, sans-serif;
+  --font-serif: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
   --font-sans: var(--font-nunito), system-ui, sans-serif;
 
   --radius: 1rem;
@@ -52,15 +52,16 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-nunito), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
-    letter-spacing: -0.01em;
+    font-family: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
+    letter-spacing: 0.01em;
+    font-synthesis-weight: none;
     font-weight: 500;
   }
 
@@ -89,7 +90,8 @@
 
 @layer utilities {
   .font-serif {
-    font-family: var(--font-serif);
+    font-family: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
+    font-synthesis-weight: none;
   }
 
   .text-balance {
