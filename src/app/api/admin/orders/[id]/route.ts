@@ -47,6 +47,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ops.push(db.productVariant.update({ where: { id: item.variantId }, data: { stock: { increment: item.quantity } } }));
     }
   }
+  // A cancelled order frees its one-time coupon so the customer can use it again.
+  if (status === "CANCELLED" && order.status !== "CANCELLED" && order.couponId) {
+    ops.push(db.coupon.update({ where: { id: order.couponId }, data: { usageCount: { decrement: 1 } } }));
+  }
   await db.$transaction(ops);
   return NextResponse.json({ success: true });
 }

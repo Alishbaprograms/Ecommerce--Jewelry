@@ -1,13 +1,17 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { REWARD_TIERS, ROUND_SECONDS } from "@/lib/shop-config";
 
 const GEMS = ["💎", "💍", "✨", "🔮", "⭐", "🌸"];
-const ROUND_SECONDS = 30;
 const H = 240;
 const CHEST_W = 56;
 const CHEST_H = 40;
+
+type Reward = { code: string; discount: number; minSpend: number; expiresAt: string; tier: string };
+export const COUPON_STORAGE_KEY = "zohrae-coupon";
 
 type Gem = { x: number; y: number; vy: number; emoji: string; size: number };
 
@@ -25,12 +29,16 @@ export function CatchJewelsGame() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const game = useRef({ running: false, gems: [] as Gem[], chestX: 150, width: 300, score: 0, timeLeft: ROUND_SECONDS, spawnIn: 0, last: 0, keys: { left: false, right: false } });
   const raf = useRef(0);
+  const tokenRef = useRef<string | null>(null);
   const tickRef = useRef<(now: number) => void>(() => {});
 
   const [phase, setPhase] = useState<"idle" | "playing" | "done">("idle");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
   const [best, setBest] = useState(0);
+  const [reward, setReward] = useState<Reward | null>(null);
+  const [rewardMsg, setRewardMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const saved = readBest();
@@ -92,6 +100,32 @@ export function CatchJewelsGame() {
     return () => window.removeEventListener("resize", resize);
   }, [resize]);
 
+  const claimReward = useCallback(async (finalScore: number) => {
+    if (finalScore < REWARD_TIERS[REWARD_TIERS.length - 1].minCatches) return;
+    const token = tokenRef.current;
+    if (!token) return;
+    try {
+      const res = await fetch("/api/game/reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, score: finalScore }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const won: Reward | undefined = res.ok ? data : data.existing;
+      if (won) {
+        setReward(won);
+        if (!res.ok) setRewardMsg(data.error ?? "");
+        try {
+          localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(won));
+        } catch {}
+      } else {
+        setRewardMsg(data.error ?? "Couldn't create your code. Please try again.");
+      }
+    } catch {
+      setRewardMsg("Couldn't reach the shop to create your code. Please try again.");
+    }
+  }, []);
+
   const finish = useCallback(() => {
     const g = game.current;
     g.running = false;
@@ -106,7 +140,8 @@ export function CatchJewelsGame() {
       return next;
     });
     draw();
-  }, [draw]);
+    void claimReward(g.score);
+  }, [draw, claimReward]);
 
   const tick = useCallback(
     (now: number) => {
@@ -175,6 +210,15 @@ export function CatchJewelsGame() {
     setScore(0);
     setTimeLeft(ROUND_SECONDS);
     setPhase("playing");
+    setReward(null);
+    setRewardMsg("");
+    tokenRef.current = null;
+    fetch("/api/game/start", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        tokenRef.current = d?.token ?? null;
+      })
+      .catch(() => {});
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame((t) => tickRef.current(t));
   }
@@ -206,6 +250,10 @@ export function CatchJewelsGame() {
 
   return (
     <div className="rounded-2xl border border-border bg-gradient-to-b from-lilac to-blush p-3">
+      <p className="text-[11px] text-center text-foreground/70 mb-2 leading-snug">
+        Catch gems to win a one-time code:{" "}
+        {[...REWARD_TIERS].reverse().map((t) => `${t.minCatches} = Rs. ${t.discount} off`).join(" · ")}
+      </p>
       <div className="flex items-center justify-between text-sm font-medium mb-2 px-1">
         <span>⭐ {score}</span>
         <span>⏱ {timeLeft}s</span>
@@ -229,6 +277,43 @@ export function CatchJewelsGame() {
           </div>
         )}
       </div>
+
+      {phase === "done" && (
+        <div className="mt-3 rounded-xl bg-white p-3 text-center text-sm">
+          {reward ? (
+            <>
+              <p className="font-medium">{rewardMsg || `${reward.tier} reward unlocked! 🎉`}</p>
+              <div className="my-2 inline-flex items-center gap-2 rounded-lg border-2 border-dashed border-primary px-3 py-1.5">
+                <span className="font-mono font-semibold tracking-wider">{reward.code}</span>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(reward.code);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    } catch {}
+                  }}
+                  aria-label="Copy code"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Rs. {reward.discount} off when you spend Rs. {reward.minSpend.toLocaleString("en-PK")} or more. Works once. Valid until{" "}
+                {new Date(reward.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. We&apos;ll fill it in at checkout.
+              </p>
+            </>
+          ) : rewardMsg ? (
+            <p className="text-xs text-muted-foreground">{rewardMsg}</p>
+          ) : score < REWARD_TIERS[REWARD_TIERS.length - 1].minCatches ? (
+            <p className="text-xs text-muted-foreground">
+              Catch {REWARD_TIERS[REWARD_TIERS.length - 1].minCatches} gems to win Rs. {REWARD_TIERS[REWARD_TIERS.length - 1].discount} off. Try again!
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Creating your code...</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

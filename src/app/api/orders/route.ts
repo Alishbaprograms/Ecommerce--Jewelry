@@ -5,12 +5,14 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
 import { calcShipping } from "@/lib/shop-config";
+import { checkCoupon } from "@/lib/coupons";
 import { sendOrderConfirmation } from "@/lib/email";
 
 const orderSchema = z.object({
   items: z
     .array(z.object({ variantId: z.string(), quantity: z.number().int().positive().max(50) }))
     .min(1, "Your cart is empty"),
+  couponCode: z.string().trim().optional().nullable(),
   customer: z.object({
     name: z.string().trim().min(2, "Please enter your name"),
     phone: z.string().trim().min(7, "Please enter a phone number we can reach you on"),
@@ -55,7 +57,16 @@ export async function POST(request: NextRequest) {
 
     const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
     const shippingCost = calcShipping(subtotal);
-    const total = subtotal + shippingCost;
+
+    let coupon: { id: string; usageLimit: number | null } | null = null;
+    let discountAmount = 0;
+    if (data.couponCode) {
+      const check = await checkCoupon(data.couponCode, subtotal);
+      if (!check.ok) throw new OrderError(check.error);
+      coupon = { id: check.coupon.id, usageLimit: check.coupon.usageLimit };
+      discountAmount = check.discount;
+    }
+    const total = subtotal - discountAmount + shippingCost;
     const orderNumber = generateOrderNumber();
     const c = data.customer;
     const [firstName, ...rest] = c.name.split(/\s+/);
@@ -68,6 +79,15 @@ export async function POST(request: NextRequest) {
           data: { stock: { decrement: l.quantity } },
         });
         if (res.count === 0) throw new OrderError(`Sorry, "${l.v.product.name}" just sold out.`);
+      }
+
+      // Claim the coupon atomically so a one-time code can't be used by two orders at once.
+      if (coupon) {
+        const claimed = await tx.coupon.updateMany({
+          where: coupon.usageLimit != null ? { id: coupon.id, usageCount: { lt: coupon.usageLimit } } : { id: coupon.id },
+          data: { usageCount: { increment: 1 } },
+        });
+        if (claimed.count === 0) throw new OrderError("That code has already been used.");
       }
 
       const address = await tx.address.create({
@@ -98,6 +118,8 @@ export async function POST(request: NextRequest) {
           shippingAddressId: address.id,
           subtotal,
           shippingCost,
+          discountAmount,
+          couponId: coupon?.id ?? null,
           taxAmount: 0,
           total,
           customerNotes: c.notes || null,

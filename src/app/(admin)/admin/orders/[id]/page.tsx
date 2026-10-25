@@ -19,6 +19,7 @@ interface OrderDetail {
   createdAt: string;
   subtotal: string;
   shippingCost: string;
+  discountAmount: string;
   total: string;
   customerNotes: string | null;
   guestName: string | null;
@@ -125,6 +126,9 @@ export default function AdminOrderDetailPage() {
         ))}
         <div className="p-4 text-sm space-y-1.5">
           <div className="flex justify-between"><span className="text-zinc-500">Subtotal</span><span>{formatPrice(Number(order.subtotal))}</span></div>
+          {Number(order.discountAmount) > 0 && (
+            <div className="flex justify-between text-emerald-600"><span>Discount code</span><span>-{formatPrice(Number(order.discountAmount))}</span></div>
+          )}
           <div className="flex justify-between"><span className="text-zinc-500">Delivery</span><span>{Number(order.shippingCost) === 0 ? "Free" : formatPrice(Number(order.shippingCost))}</span></div>
           <div className="flex justify-between font-semibold text-base pt-1">
             <span>Collect on delivery</span><span>{formatPrice(Number(order.total))}</span>
