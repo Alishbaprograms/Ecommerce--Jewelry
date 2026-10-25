@@ -70,3 +70,23 @@ export function CartoonClose({ className }: P) {
     </Svg>
   );
 }
+
+const BRACELET_BEADS = ["#f472b6", "#facc15", "#60a5fa", "#4ade80", "#a78bfa", "#fb923c", "#ef4444", "#f8fafc"];
+
+export function CartoonBracelet({ className }: P) {
+  return (
+    <Svg className={className}>
+      <circle cx="24" cy="25" r="14.500" stroke={OUTLINE} strokeWidth="2.500" strokeDasharray="0.5 4" />
+      {BRACELET_BEADS.map((color, i) => {
+        const a = (i / BRACELET_BEADS.length) * 2 * Math.PI - Math.PI / 2;
+        return (
+          <g key={color}>
+            <circle cx={24 + Math.cos(a) * 14.500} cy={25 + Math.sin(a) * 14.500} r="5" fill={color} stroke={OUTLINE} strokeWidth="1.800" />
+            <circle cx={24 + Math.cos(a) * 14.500 - 1.500} cy={25 + Math.sin(a) * 14.500 - 1.600} r="1.300" fill="#fff" opacity=".8" />
+          </g>
+        );
+      })}
+      <path d="M38 2l1.200 3 3 1.200-3 1.200L38 10.400l-1.200-3-3-1.200 3-1.200Z" fill="#facc15" stroke="#f59e0b" strokeWidth="0.8" />
+    </Svg>
+  );
+}
