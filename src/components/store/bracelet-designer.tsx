@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Check, Copy, Undo2 } from "lucide-react";
+import { whatsappLink } from "@/lib/shop-config";
 import { Button } from "@/components/ui/button";
 import { BEADS, MAX_BEADS, decodeBracelet, encodeBracelet, type Bead } from "@/lib/bracelet";
 import { BeadShape, BraceletView } from "@/components/store/bracelet-view";
@@ -25,6 +26,14 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   }
 
+  function sendToZohrae() {
+    window.open(
+      whatsappLink(`Hi Zohraé! My little one designed this bracelet 💖 ${shareUrl(beads)} Can you make it?`),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(shareUrl(beads));
@@ -43,6 +52,7 @@ export function BraceletDesigner({ onShopClick }: { onShopClick?: () => void }) 
         <p className="text-sm text-muted-foreground">Show it to a grown-up, or send it to them on WhatsApp.</p>
         <div className="flex flex-col gap-2">
           <Button size="lg" onClick={sendWhatsApp}>Send to WhatsApp</Button>
+          <Button size="lg" variant="secondary" onClick={sendToZohrae}>Ask Zohraé to make this</Button>
           <Button asChild size="lg" variant="outline" onClick={onShopClick}>
             <Link href="/collections/bead-bracelets">Shop bead bracelets</Link>
           </Button>

@@ -1,4 +1,5 @@
 import React from "react";
+import { WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shop-config";
 import Link from "next/link";
 
 const shopLinks = [
@@ -11,8 +12,6 @@ const shopLinks = [
 ];
 
 export function Footer() {
-  const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE;
-
   return (
     <footer className="bg-foreground text-white">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
@@ -43,13 +42,16 @@ export function Footer() {
               <li>💵 Cash on delivery</li>
               <li>🚚 Delivered across Pakistan</li>
               <li>📞 We call to confirm every order</li>
-              {phone && (
-                <li>
-                  <a href={`tel:${phone}`} className="underline hover:text-white">
-                    Call us: {phone}
-                  </a>
-                </li>
-              )}
+              <li>
+                <a
+                  href={whatsappLink("Hi Zohraé! I have a question.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-white"
+                >
+                  💬 WhatsApp us: {WHATSAPP_DISPLAY}
+                </a>
+              </li>
             </ul>
           </div>
         </div>
