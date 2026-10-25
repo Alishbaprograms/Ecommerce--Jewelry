@@ -119,6 +119,28 @@ export function AdminDashboardClient({ stats }: Props) {
         <p className="text-zinc-500 text-sm mt-1">Welcome back. Here's what's happening today.</p>
       </div>
 
+      {(stats.pendingOrders > 0 || stats.lowStockVariants > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0 }}
+          className="bg-amber-50 border border-amber-200 rounded-xl p-4"
+        >
+          <h3 className="font-semibold text-amber-800 flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4" />
+            Action Required
+          </h3>
+          <div className="space-y-1 text-sm text-amber-700">
+            {stats.pendingOrders > 0 && (
+              <p>• <strong>{stats.pendingOrders}</strong> orders waiting to be confirmed</p>
+            )}
+            {stats.lowStockVariants > 0 && (
+              <p>• <strong>{stats.lowStockVariants}</strong> items running low on stock</p>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -260,27 +282,6 @@ export function AdminDashboardClient({ stats }: Props) {
       </div>
 
       {/* Alerts */}
-      {(stats.pendingOrders > 0 || stats.lowStockVariants > 0) && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-amber-50 border border-amber-200 rounded-xl p-4"
-        >
-          <h3 className="font-semibold text-amber-800 flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-4 w-4" />
-            Action Required
-          </h3>
-          <div className="space-y-1 text-sm text-amber-700">
-            {stats.pendingOrders > 0 && (
-              <p>• <strong>{stats.pendingOrders}</strong> orders are pending fulfillment</p>
-            )}
-            {stats.lowStockVariants > 0 && (
-              <p>• <strong>{stats.lowStockVariants}</strong> product variants are running low on stock</p>
-            )}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }
