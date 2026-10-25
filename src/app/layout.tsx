@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Chewy, Nunito } from "next/font/google";
+import { Handlee, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -7,8 +7,8 @@ import { CartDrawer } from "@/components/store/cart-drawer";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const chewy = Chewy({
-  variable: "--font-chewy",
+const handlee = Handlee({
+  variable: "--font-handlee",
   weight: "400",
   subsets: ["latin"],
 });
@@ -56,7 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${chewy.variable} ${nunito.variable} font-sans antialiased`}>
+      <body className={`${handlee.variable} ${nunito.variable} font-sans antialiased`}>
         <Providers>
           {children}
           <Toaster

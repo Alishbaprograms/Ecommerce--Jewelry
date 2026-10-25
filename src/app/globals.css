@@ -31,7 +31,7 @@
   --color-butter: #fff2c4;
   --color-sky: #dff0ff;
 
-  --font-serif: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
+  --font-serif: var(--font-handlee), "Trebuchet MS", system-ui, sans-serif;
   --font-sans: var(--font-nunito), system-ui, sans-serif;
 
   --radius: 1rem;
@@ -59,9 +59,10 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
+    font-family: var(--font-handlee), "Trebuchet MS", system-ui, sans-serif;
     letter-spacing: 0.01em;
     font-synthesis-weight: none;
+    -webkit-text-stroke: 0.6px currentColor;
     font-weight: 500;
   }
 
@@ -90,8 +91,9 @@
 
 @layer utilities {
   .font-serif {
-    font-family: var(--font-chewy), "Trebuchet MS", system-ui, sans-serif;
+    font-family: var(--font-handlee), "Trebuchet MS", system-ui, sans-serif;
     font-synthesis-weight: none;
+    -webkit-text-stroke: 0.6px currentColor;
   }
 
   .text-balance {
