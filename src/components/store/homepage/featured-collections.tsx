@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 
 const categories: { name: string; slug: string; emoji: string; image?: string; note: string; bg: string }[] = [
-  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", image: "/categories/magnetic-earrings-strawberry.jpg", note: "Clip-on, no piercing", bg: "bg-blush" },
+  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", image: "/categories/magnetic-earrings-blend3.jpg", note: "Clip-on, no piercing", bg: "bg-blush" },
   { name: "Bead Bracelets", slug: "bead-bracelets", emoji: "🌈", note: "Colourful & stretchy", bg: "bg-butter" },
   { name: "Bead Necklaces", slug: "bead-necklaces", emoji: "🌸", note: "Sweet little strands", bg: "bg-lilac" },
   { name: "Hair Clips", slug: "hair-accessories", emoji: "🎀", note: "Clips, bows & bands", bg: "bg-mint" },
@@ -43,8 +43,17 @@ export function FeaturedCollections() {
               className={`group flex flex-col items-center text-center rounded-3xl ${c.bg} px-3 py-7 sm:py-9 transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
             >
               {c.image ? (
-                <span className="relative mb-3 block h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-2xl ring-2 ring-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                  <Image src={c.image} alt={c.name} fill sizes="112px" className="object-cover" />
+                // The photo has a pure white background; multiply makes the white disappear into the tile colour,
+                // so it looks printed on the tile, not placed in a frame. Blend and tilt sit on the <Image> itself:
+                // a transformed wrapper would isolate it and stop the blend.
+                <span className="relative mb-2 block h-32 w-32 sm:h-40 sm:w-40">
+                  <Image
+                    src={c.image}
+                    alt={c.name}
+                    fill
+                    sizes="160px"
+                    className="object-contain mix-blend-multiply -rotate-3 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-0"
+                  />
                 </span>
               ) : (
                 <span className="text-5xl sm:text-6xl mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" aria-hidden>
