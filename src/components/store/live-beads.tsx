@@ -5,11 +5,12 @@ import React, { useEffect, useRef } from "react";
 // Loose beads drifting around the hero. They bounce off the edges and each other, drift out of the way of the
 // text, and react to touch: tap a bead to pop it (it hops and bursts into sparkles), tap empty space to drop a new one.
 
-type Kind = "round" | "pearl" | "heart" | "star" | "smiley";
+type Kind = "seed" | "round" | "pearl";
 interface Bead { x: number; y: number; vx: number; vy: number; r: number; kind: Kind; hue: number; rot: number; vr: number; pop: number }
 interface Spark { x: number; y: number; vx: number; vy: number; life: number; hue: number }
 
-const HUES = [335, 265, 155, 45, 205, 15]; // pink, lilac, mint, butter, sky, coral
+// soft, slightly dusty pastels (rose, lilac, sage, champagne, sky, peach)
+const HUES = [338, 268, 150, 42, 205, 18];
 
 function rand(a: number, b: number) {
   return a + Math.random() * (b - a);
@@ -17,101 +18,64 @@ function rand(a: number, b: number) {
 
 function makeBead(x: number, y: number, small: boolean): Bead {
   const roll = Math.random();
-  const kind: Kind = roll < 0.07 ? "heart" : roll < 0.12 ? "star" : roll < 0.17 ? "smiley" : roll < 0.3 ? "pearl" : "round";
-  const base = small ? [11, 22] : [15, 32];
+  // mostly tiny seed beads, a few pearls and slightly bigger beads
+  const kind: Kind = roll < 0.55 ? "seed" : roll < 0.8 ? "round" : "pearl";
+  const sizes = small
+    ? { seed: [4, 7], round: [7, 11], pearl: [8, 12] }
+    : { seed: [5, 8], round: [9, 14], pearl: [10, 15] };
+  const [lo, hi] = sizes[kind];
   return {
     x, y,
-    vx: rand(-30, 30), vy: rand(-30, 30),
-    r: rand(base[0], base[1]),
+    vx: rand(-22, 22), vy: rand(-22, 22),
+    r: rand(lo, hi),
     kind,
     hue: HUES[Math.floor(Math.random() * HUES.length)],
     rot: rand(0, Math.PI * 2),
-    vr: rand(-0.6, 0.6),
+    vr: rand(-0.4, 0.4),
     pop: 0,
   };
 }
 
 function drawBead(ctx: CanvasRenderingContext2D, b: Bead) {
-  const squish = b.pop > 0 ? 1 + 0.28 * Math.sin(b.pop * Math.PI * 3) * b.pop : 1;
+  const squish = b.pop > 0 ? 1 + 0.2 * Math.sin(b.pop * Math.PI * 3) * b.pop : 1;
+  const r = b.r;
   ctx.save();
   ctx.translate(b.x, b.y);
   ctx.rotate(b.rot);
   ctx.scale(squish, 2 - squish);
-  ctx.shadowColor = "rgba(91, 23, 64, 0.28)";
-  ctx.shadowBlur = b.r * 0.55;
-  ctx.shadowOffsetY = b.r * 0.28;
-  const r = b.r;
+  ctx.shadowColor = "rgba(110, 60, 110, 0.18)";
+  ctx.shadowBlur = r * 0.7;
+  ctx.shadowOffsetY = r * 0.3;
 
-  if (b.kind === "heart") {
-    const k = r / 10;
-    ctx.scale(k, k);
-    ctx.beginPath();
-    ctx.moveTo(0, 9);
-    ctx.bezierCurveTo(-11, 0, -8, -9, 0, -4);
-    ctx.bezierCurveTo(8, -9, 11, 0, 0, 9);
-    const g = ctx.createLinearGradient(-8, -8, 8, 8);
-    g.addColorStop(0, "hsl(335 100% 82%)");
-    g.addColorStop(1, "hsl(335 80% 55%)");
-    ctx.fillStyle = g;
-    ctx.fill();
-  } else if (b.kind === "star") {
-    const k = r / 10;
-    ctx.scale(k, k);
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const rad = i % 2 === 0 ? 10 : 4.4;
-      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
-      ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-    }
-    ctx.closePath();
-    const g = ctx.createLinearGradient(-8, -8, 8, 8);
-    g.addColorStop(0, "hsl(50 100% 78%)");
-    g.addColorStop(1, "hsl(40 95% 52%)");
-    ctx.fillStyle = g;
-    ctx.fill();
-  } else {
-    const hue = b.kind === "pearl" ? 290 : b.kind === "smiley" ? 48 : b.hue;
-    const sat = b.kind === "pearl" ? 25 : 90;
-    const g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.05, 0, 0, r);
-    g.addColorStop(0, "#fff");
-    g.addColorStop(0.14, `hsl(${hue} ${sat}% ${b.kind === "pearl" ? 97 : 82}%)`);
-    g.addColorStop(0.6, `hsl(${hue} ${sat}% ${b.kind === "pearl" ? 90 : 64}%)`);
-    g.addColorStop(1, `hsl(${hue} ${sat - 10}% ${b.kind === "pearl" ? 72 : 44}%)`);
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-    if (b.kind === "smiley") {
-      ctx.fillStyle = "#4a3000";
-      ctx.beginPath();
-      ctx.arc(-r * 0.32, -r * 0.15, r * 0.1, 0, Math.PI * 2);
-      ctx.arc(r * 0.32, -r * 0.15, r * 0.1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#4a3000";
-      ctx.lineWidth = r * 0.1;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.42, r * 0.2);
-      ctx.quadraticCurveTo(0, r * 0.62, r * 0.42, r * 0.2);
-      ctx.stroke();
-    }
-    // glossy highlight
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.beginPath();
-    ctx.ellipse(-r * 0.35, -r * 0.42, r * 0.38, r * 0.2, -0.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  const pearl = b.kind === "pearl";
+  const hue = pearl ? 300 : b.hue;
+  const sat = pearl ? 18 : 52;
+  const g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.05, 0, 0, r);
+  g.addColorStop(0, "#fff");
+  g.addColorStop(0.18, `hsl(${hue} ${sat}% ${pearl ? 98 : 88}%)`);
+  g.addColorStop(0.65, `hsl(${hue} ${sat}% ${pearl ? 93 : 78}%)`);
+  g.addColorStop(1, `hsl(${hue} ${sat}% ${pearl ? 80 : 62}%)`);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // a small, soft highlight
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.34, -r * 0.4, r * 0.28, r * 0.14, -0.5, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
 function drawSpark(ctx: CanvasRenderingContext2D, s: Spark) {
-  const size = 3 + 9 * s.life;
+  const size = 1.5 + 4.5 * s.life;
   ctx.save();
   ctx.translate(s.x, s.y);
   ctx.rotate(s.life * 3);
   ctx.globalAlpha = Math.min(1, s.life * 1.6);
-  ctx.fillStyle = `hsl(${s.hue} 100% 66%)`;
+  ctx.fillStyle = `hsl(${s.hue} 85% 78%)`;
   ctx.beginPath();
   for (let i = 0; i < 8; i++) {
     const rad = i % 2 === 0 ? size : size * 0.3;
@@ -148,17 +112,17 @@ export function LiveBeads({ avoidRef, className }: { avoidRef?: React.RefObject<
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const small = w < 640;
-      const target = small ? 20 : 34;
+      const target = small ? 24 : 32;
       if (beads.length === 0) {
         for (let i = 0; i < target; i++) beads.push(makeBead(rand(30, Math.max(60, w - 30)), rand(30, Math.max(60, h - 30)), small));
       }
     };
 
     const burst = (x: number, y: number, hue: number) => {
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2 + Math.random() * 0.4;
-        const sp = rand(70, 190);
-        sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, hue: (hue + rand(-30, 30) + 360) % 360 });
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + Math.random() * 0.4;
+        const sp = rand(40, 110);
+        sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, hue: i % 3 === 0 ? 46 : (hue + rand(-20, 20) + 360) % 360 });
       }
     };
 
@@ -170,13 +134,13 @@ export function LiveBeads({ avoidRef, className }: { avoidRef?: React.RefObject<
 
       for (const b of beads) {
         // a lazy wander so they never stop drifting
-        b.vx += rand(-25, 25) * dt;
-        b.vy += rand(-25, 25) * dt;
+        b.vx += rand(-18, 18) * dt;
+        b.vy += rand(-18, 18) * dt;
         if (pointer.active) {
           const dx = b.x - pointer.x, dy = b.y - pointer.y, d = Math.hypot(dx, dy);
-          if (d < 110 && d > 0) {
-            b.vx += (dx / d) * (110 - d) * 5 * dt;
-            b.vy += (dy / d) * (110 - d) * 5 * dt;
+          if (d < 90 && d > 0) {
+            b.vx += (dx / d) * (90 - d) * 4 * dt;
+            b.vy += (dy / d) * (90 - d) * 4 * dt;
           }
         }
         // keep clear of the headline and buttons
@@ -187,7 +151,7 @@ export function LiveBeads({ avoidRef, className }: { avoidRef?: React.RefObject<
           else b.vy += Math.sign(dy || 1) * 260 * dt;
         }
         const sp = Math.hypot(b.vx, b.vy);
-        const max = 70, min = 14;
+        const max = 48, min = 9;
         if (sp > max) { b.vx *= max / sp; b.vy *= max / sp; }
         else if (sp < min && sp > 0) { b.vx *= min / sp; b.vy *= min / sp; }
         b.x += b.vx * dt;
@@ -219,7 +183,7 @@ export function LiveBeads({ avoidRef, className }: { avoidRef?: React.RefObject<
       }
       for (let i = sparks.length - 1; i >= 0; i--) {
         const s = sparks[i];
-        s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.96; s.vy *= 0.96; s.life -= dt * 1.6;
+        s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.94; s.vy *= 0.94; s.life -= dt * 2.1;
         if (s.life <= 0) sparks.splice(i, 1);
       }
     };
@@ -243,18 +207,18 @@ export function LiveBeads({ avoidRef, className }: { avoidRef?: React.RefObject<
       const p = local(e);
       let hit: Bead | null = null;
       for (let i = beads.length - 1; i >= 0; i--) {
-        if (Math.hypot(beads[i].x - p.x, beads[i].y - p.y) <= beads[i].r + 10) { hit = beads[i]; break; }
+        if (Math.hypot(beads[i].x - p.x, beads[i].y - p.y) <= beads[i].r + 14) { hit = beads[i]; break; }
       }
       try { navigator.vibrate?.(8); } catch {}
       if (hit) {
         hit.pop = 1;
-        hit.vy -= 170; hit.vx += rand(-80, 80);
+        hit.vy -= 110; hit.vx += rand(-50, 50);
         burst(hit.x, hit.y, hit.hue);
       } else {
         const small = w < 640;
         const nb = makeBead(p.x, p.y, small);
         nb.pop = 1;
-        if (beads.length >= (small ? 30 : 48)) beads.shift();
+        if (beads.length >= (small ? 34 : 44)) beads.shift();
         beads.push(nb);
         burst(p.x, p.y, nb.hue);
       }
