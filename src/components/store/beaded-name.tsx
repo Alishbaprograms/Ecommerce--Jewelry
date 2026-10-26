@@ -187,8 +187,7 @@ const sway = { animation: "bead-sway 7s ease-in-out infinite", transformOrigin: 
 
 export function BeadedName({ className }: { className?: string }) {
   const wide = curve({ x: -60, y: 20 }, { x: 600, y: 340 }, { x: 1260, y: 20 });
-  const row1 = curve({ x: -40, y: 28 }, { x: 300, y: 215 }, { x: 640, y: 28 });
-  const row2 = curve({ x: -40, y: 235 }, { x: 300, y: 422 }, { x: 640, y: 235 });
+  const small = curve({ x: -50, y: 62 }, { x: 300, y: 150 }, { x: 650, y: 62 });
   const letters = ["Z", "O", "H", "R", "A", "É"];
 
   return (
@@ -200,12 +199,11 @@ export function BeadedName({ className }: { className?: string }) {
           <Row path={wide} letters={letters} scale={1} edge offset={0} id="bw" />
         </g>
       </svg>
-      {/* phones: two shorter strings, ZOH over RAÉ, so the letters stay big enough to read */}
-      <svg viewBox="0 0 600 335" className="sm:hidden w-full h-auto overflow-visible" aria-hidden="true">
+      {/* phones: the whole name on one string, with bigger beads so the letters stay easy to read */}
+      <svg viewBox="0 0 600 150" className="sm:hidden w-full h-auto overflow-visible" aria-hidden="true">
         <Defs id="bm" />
         <g style={sway}>
-          <Row path={row1} letters={letters.slice(0, 3)} scale={1.05} edge={false} offset={0} id="bm" />
-          <Row path={row2} letters={letters.slice(3)} scale={1.05} edge={false} offset={3} id="bm" />
+          <Row path={small} letters={letters} scale={1.2} edge={false} offset={0} id="bm" />
         </g>
       </svg>
     </div>
