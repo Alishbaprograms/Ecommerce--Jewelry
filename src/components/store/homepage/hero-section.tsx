@@ -1,49 +1,70 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { BeadedName } from "@/components/store/beaded-name";
+import { LiveBeads } from "@/components/store/live-beads";
 import { SilkBackground } from "@/components/store/homepage/silk-background";
 
-export function HeroSection() {
+export function HeroSection({ variant = "bracelet" }: { variant?: "bracelet" | "beads" }) {
+  const textRef = useRef<HTMLDivElement>(null);
+  const loose = variant === "beads";
+
+  const cta = (
+    <>
+      <motion.h1
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-3xl sm:text-5xl font-semibold leading-tight text-balance"
+      >
+        Tiny treasures for little ones
+      </motion.h1>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="mt-7"
+      >
+        <Button asChild size="lg" className="pointer-events-auto">
+          <Link href="/collections">Shop all jewelry</Link>
+        </Button>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("open-bracelet-designer"))}
+          className="pointer-events-auto mt-4 block w-full text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Design your own bracelet →
+        </button>
+      </motion.div>
+    </>
+  );
+
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(135deg,#f9d3e4_0%,#e7d6fb_50%,#ffe0cf_100%)] text-[#2a2340]">
       <SilkBackground />
 
-      {/* The brand name, spelled in beads on a string */}
-      <div className="relative mx-auto max-w-5xl px-2 pt-28 sm:pt-32">
-        <BeadedName />
-      </div>
-
-      <div className="relative mx-auto max-w-3xl px-4 pt-9 pb-16 sm:pt-6 sm:pb-20 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-3xl sm:text-5xl font-semibold leading-tight text-balance"
-        >
-          Tiny treasures for little ones
-        </motion.h1>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mt-7"
-        >
-          <Button asChild size="lg">
-            <Link href="/collections">Shop all jewelry</Link>
-          </Button>
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new Event("open-bracelet-designer"))}
-            className="mt-4 block w-full text-sm font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            Design your own bracelet →
-          </button>
-        </motion.div>
-      </div>
+      {loose ? (
+        <>
+          {/* loose, playful beads drifting behind the words; tap them */}
+          <LiveBeads avoidRef={textRef} className="absolute inset-x-0 bottom-0 top-[7.2rem] h-[calc(100%-7.2rem)] w-full" />
+          <div className="pointer-events-none relative flex min-h-[540px] items-center justify-center px-4 pb-16 pt-40 sm:min-h-[620px]">
+            <div ref={textRef} className="mx-auto max-w-3xl text-center">
+              {cta}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* The brand name, spelled in beads on a string */}
+          <div className="relative mx-auto max-w-5xl px-2 pt-28 sm:pt-32">
+            <BeadedName />
+          </div>
+          <div className="relative mx-auto max-w-3xl px-4 pt-9 pb-16 sm:pt-6 sm:pb-20 text-center">{cta}</div>
+        </>
+      )}
     </section>
   );
 }
