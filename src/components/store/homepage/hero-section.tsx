@@ -4,14 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-
-const floaters = [
-  { emoji: "🧲", className: "left-[4%] top-[6%] text-4xl sm:left-[6%] sm:top-[30%] sm:text-6xl", r: "-12deg", delay: "0s" },
-  { emoji: "🌈", className: "right-[5%] top-[5%] text-4xl sm:right-[8%] sm:top-[28%] sm:text-7xl", r: "10deg", delay: "1s" },
-  { emoji: "🎀", className: "hidden sm:block left-[14%] bottom-[14%] sm:text-5xl", r: "8deg", delay: "2s" },
-  { emoji: "💖", className: "hidden sm:block right-[16%] bottom-[16%] sm:text-5xl", r: "-8deg", delay: "0.5s" },
-  { emoji: "✨", className: "hidden sm:block left-[44%] top-[20%] text-3xl", r: "0deg", delay: "1.5s" },
-];
+import { BeadedName } from "@/components/store/beaded-name";
 
 export function HeroSection() {
   return (
@@ -20,18 +13,12 @@ export function HeroSection() {
       <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/20 blur-2xl" />
       <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-violet-400/30 blur-3xl" />
 
-      {floaters.map((f) => (
-        <span
-          key={f.emoji}
-          aria-hidden
-          className={`float-slow absolute select-none opacity-90 ${f.className}`}
-          style={{ ["--r" as string]: f.r, animationDelay: f.delay }}
-        >
-          {f.emoji}
-        </span>
-      ))}
+      {/* The brand name, spelled in beads on a string */}
+      <div className="relative mx-auto max-w-5xl px-2 pt-28 sm:pt-32">
+        <BeadedName />
+      </div>
 
-      <div className="relative max-w-3xl mx-auto px-4 pt-40 pb-24 sm:pt-48 sm:pb-32 text-center">
+      <div className="relative max-w-3xl mx-auto px-4 pt-8 pb-20 sm:pt-6 sm:pb-28 text-center">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

@@ -112,6 +112,15 @@
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.12);
   }
 
+  @keyframes bead-sway {
+    0%, 100% { transform: rotate(-0.8deg); }
+    50% { transform: rotate(0.8deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [style*="bead-sway"] { animation: none !important; }
+  }
+
   .float-slow {
     animation: floaty 6s ease-in-out infinite;
   }
