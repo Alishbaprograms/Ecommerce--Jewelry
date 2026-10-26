@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, Plus, Trash2, X } from "lucide-react";
+import { shrinkImage } from "@/lib/shrink-image";
 
 type Variant = { id?: string; name: string; price: string; stock: string };
 
@@ -36,23 +37,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       {hint && <p className="text-xs text-zinc-500 mt-1">{hint}</p>}
     </div>
   );
-}
-
-// Phone photos are often 5–10 MB; shrink in the browser so uploads stay fast and under host limits.
-async function shrinkImage(file: File): Promise<File> {
-  if (file.size < 1_200_000 && file.type !== "image/heic") return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
-    return blob ? new File([blob], "photo.jpg", { type: "image/jpeg" }) : file;
-  } catch {
-    return file;
-  }
 }
 
 export function ProductForm({ product, onSuccess }: { product?: ProductFormProduct; onSuccess: () => void }) {

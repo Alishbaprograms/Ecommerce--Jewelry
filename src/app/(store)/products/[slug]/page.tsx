@@ -22,10 +22,13 @@ async function getProduct(slug: string) {
       },
       category: { select: { name: true, slug: true } },
       reviews: {
-        where: { status: "APPROVED" },
-        include: { user: { select: { name: true, image: true } } },
-        orderBy: { createdAt: "desc" },
-        take: 10,
+        where: { status: "APPROVED", deletedAt: null },
+        select: {
+          id: true, rating: true, guestName: true, guestCity: true, kidAge: true, tags: true,
+          verified: true, body: true, images: true, adminReply: true, createdAt: true,
+        },
+        orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+        take: 60,
       },
     },
   });
@@ -51,6 +54,24 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  // Summary numbers come from every approved review, not just the ones listed above.
+  const [ratingGroups, tagRows] = await Promise.all([
+    db.review.groupBy({ by: ["rating"], where: { productId: product.id, status: "APPROVED", deletedAt: null }, _count: true }),
+    db.review.findMany({ where: { productId: product.id, status: "APPROVED", deletedAt: null }, select: { tags: true }, take: 500 }),
+  ]);
+  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const g of ratingGroups) distribution[g.rating] = g._count;
+  const count = Object.values(distribution).reduce((a, b) => a + b, 0);
+  const average = count ? Object.entries(distribution).reduce((sum, [r, n]) => sum + Number(r) * n, 0) / count : 0;
+  const tagTotals = new Map<string, number>();
+  for (const row of tagRows) for (const t of row.tags) tagTotals.set(t, (tagTotals.get(t) ?? 0) + 1);
+  const reviewSummary = {
+    average,
+    count,
+    distribution,
+    tagCounts: [...tagTotals.entries()].map(([tag, n]) => ({ tag, count: n })).sort((a, b) => b.count - a.count).slice(0, 6),
+  };
+
   const serializedProduct = JSON.parse(
     JSON.stringify(product, (_, v) =>
       typeof v === "bigint"
@@ -61,5 +82,9 @@ export default async function ProductPage({ params }: Props) {
     )
   );
 
-  return <ProductPageClient product={serializedProduct} />;
+  return <ProductPageClient
+      product={serializedProduct}
+      reviews={serializedProduct.reviews}
+      reviewSummary={reviewSummary}
+    />;
 }

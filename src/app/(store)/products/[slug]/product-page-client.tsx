@@ -5,6 +5,8 @@ import { track } from "@/lib/track";
 import { FREE_SHIPPING_OVER, SHIPPING_FLAT } from "@/lib/shop-config";
 import Image from "next/image";
 import { TreasureChest } from "@/components/store/treasure-chest";
+import { CartoonStar } from "@/components/store/cartoon-icons";
+import { ReviewsSection, type ReviewItem, type ReviewSummary } from "@/components/store/reviews-section";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -67,18 +69,12 @@ interface Product {
     attributes: Array<{ name: string; value: string }>;
   }>;
   category: { name: string; slug: string } | null;
-  reviews: Array<{
-    id: string;
-    rating: number;
-    title: string | null;
-    body: string | null;
-    createdAt: string;
-    user: { name: string; image: string | null };
-  }>;
 }
 
 interface Props {
   product: Product;
+  reviews: ReviewItem[];
+  reviewSummary: ReviewSummary;
 }
 
 const accordionItems = [
@@ -99,7 +95,7 @@ const accordionItems = [
   },
 ];
 
-export function ProductPageClient({ product }: Props) {
+export function ProductPageClient({ product, reviews, reviewSummary }: Props) {
   const [selectedVariant, setSelectedVariant] = useState(
     product.variants.find((v) => v.isDefault) ?? product.variants[0]
   );
@@ -291,26 +287,18 @@ export function ProductPageClient({ product }: Props) {
                 {product.name}
               </h1>
 
-              {product.reviewCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          i < Math.round(avgRating)
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground/30"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {avgRating.toFixed(1)} ({product.reviewCount} reviews)
-                  </span>
-                </div>
-              )}
+              <a href="#reviews" className="inline-flex items-center gap-2">
+                <span className="flex">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <CartoonStar key={n} className="h-5 w-5" filled={product.reviewCount > 0 && n <= Math.round(avgRating)} />
+                  ))}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {product.reviewCount > 0
+                    ? `${avgRating.toFixed(1)} (${product.reviewCount} review${product.reviewCount > 1 ? "s" : ""})`
+                    : "Be the first to review"}
+                </span>
+              </a>
             </div>
 
             {/* Price */}
@@ -564,58 +552,7 @@ export function ProductPageClient({ product }: Props) {
           </div>
         </div>
 
-        {/* Reviews */}
-        {product.reviews.length > 0 && (
-          <div className="mt-20">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="font-serif text-3xl font-light mb-1">Customer Reviews</h2>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-4 w-4",
-                          i < Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-muted-foreground">
-                    {avgRating.toFixed(1)} out of 5 · {product.reviewCount} reviews
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {product.reviews.map((review) => (
-                <div key={review.id} className="border border-border p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-sm font-medium">{review.user.name[0]}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{review.user.name}</p>
-                      <div className="flex">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {review.title && (
-                    <p className="font-medium text-sm mb-1">{review.title}</p>
-                  )}
-                  {review.body && (
-                    <p className="text-sm text-muted-foreground leading-relaxed">{review.body}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <ReviewsSection productId={product.id} productName={product.name} reviews={reviews} summary={reviewSummary} />
       </div>
     </div>
   );

@@ -60,13 +60,15 @@ async function getDashboardStats() {
 
   // Small games summary for the dashboard strip; the full picture lives on the Insights page.
   const pktToday = startOfPktDay();
-  const [gamesToday, codesWonToday, codesUsedTotal] = await Promise.all([
+  const [pendingReviews, gamesToday, codesWonToday, codesUsedTotal] = await Promise.all([
+    db.review.count({ where: { status: "PENDING", deletedAt: null } }),
     db.analyticsEvent.count({ where: { name: "game_start", createdAt: { gte: pktToday } } }),
     db.coupon.count({ where: { description: { startsWith: "game:" }, createdAt: { gte: pktToday } } }),
     db.coupon.count({ where: { description: { startsWith: "game:" }, usageCount: { gt: 0 } } }),
   ]);
 
   return {
+    pendingReviews,
     gamesToday,
     codesWonToday,
     codesUsedTotal,

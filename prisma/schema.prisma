@@ -661,7 +661,12 @@ model Coupon {
 model Review {
   id         String       @id @default(cuid())
   productId  String
-  userId     String
+  userId     String?
+  guestName  String?
+  guestCity  String?
+  kidAge     String?
+  tags       String[]
+  verified   Boolean      @default(false)
   rating     Int
   title      String?
   body       String?
@@ -675,7 +680,7 @@ model Review {
   updatedAt  DateTime     @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
 
   @@unique([productId, userId])
   @@index([productId])

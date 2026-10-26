@@ -90,3 +90,14 @@ export function CartoonBracelet({ className }: P) {
     </Svg>
   );
 }
+
+const STAR_PATH = "M24 4l5.600 12.300 13.400 1.500-10 9.100 2.800 13.200L24 33.200l-11.800 6.900 2.800-13.200-10-9.100 13.400-1.500Z";
+
+export function CartoonStar({ className, filled = true }: P & { filled?: boolean }) {
+  return (
+    <Svg className={className}>
+      <path d={STAR_PATH} fill={filled ? "#fbbf24" : "#f4f1ea"} stroke={filled ? OUTLINE : "#cfc8bb"} strokeWidth={SW} />
+      {filled && <path d="M17 17.500c1.200-2.400 3-4 5.300-5" stroke="#fff" strokeWidth="2.600" opacity=".8" />}
+    </Svg>
+  );
+}

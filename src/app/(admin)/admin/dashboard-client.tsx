@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface Props {
   stats: {
+    pendingReviews: number;
     gamesToday: number;
     codesWonToday: number;
     codesUsedTotal: number;
@@ -123,7 +124,7 @@ export function AdminDashboardClient({ stats }: Props) {
         <p className="text-zinc-500 text-sm mt-1">Welcome back. Here's what's happening today.</p>
       </div>
 
-      {(stats.pendingOrders > 0 || stats.lowStockVariants > 0) && (
+      {(stats.pendingOrders > 0 || stats.lowStockVariants > 0 || stats.pendingReviews > 0) && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,6 +138,9 @@ export function AdminDashboardClient({ stats }: Props) {
           <div className="space-y-1 text-sm text-amber-700">
             {stats.pendingOrders > 0 && (
               <p>• <strong>{stats.pendingOrders}</strong> orders waiting to be confirmed</p>
+            )}
+            {stats.pendingReviews > 0 && (
+              <p>• <Link href="/admin/reviews" className="underline"><strong>{stats.pendingReviews}</strong> reviews waiting to be approved</Link></p>
             )}
             {stats.lowStockVariants > 0 && (
               <p>• <strong>{stats.lowStockVariants}</strong> items running low on stock</p>

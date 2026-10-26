@@ -17,6 +17,8 @@ export const EVENT_NAMES = [
   "product_view",
   "add_to_cart",
   "checkout_start",
+  "review_open",
+  "review_submit",
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

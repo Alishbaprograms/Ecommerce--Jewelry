@@ -10,6 +10,7 @@ import {
   Tag,
   Ticket,
   Sparkles,
+  Star,
   Archive,
   LogOut,
   X,
@@ -23,6 +24,7 @@ const navItems = [
   { label: "Products", icon: Package, href: "/admin/products" },
   { label: "Categories", icon: Tag, href: "/admin/categories" },
   { label: "Inventory", icon: Archive, href: "/admin/inventory" },
+  { label: "Reviews", icon: Star, href: "/admin/reviews" },
   { label: "Discount codes", icon: Ticket, href: "/admin/codes" },
   { label: "Insights", icon: Sparkles, href: "/admin/insights" },
 ];
