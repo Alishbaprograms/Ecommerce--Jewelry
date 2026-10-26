@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
 // Loose beads drifting around the hero. They bounce off the edges and each other, drift out of the way of the
 // text, and react to touch: tap a bead to pop it (it hops and bursts into sparkles), tap empty space to drop a new one.
 
-type Kind = "seed" | "round" | "pearl";
+type Kind = "seed" | "round" | "pearl" | "star";
 interface Bead { x: number; y: number; vx: number; vy: number; r: number; kind: Kind; hue: number; rot: number; vr: number; pop: number }
 interface Spark { x: number; y: number; vx: number; vy: number; life: number; hue: number }
 
@@ -18,11 +18,11 @@ function rand(a: number, b: number) {
 
 function makeBead(x: number, y: number, small: boolean): Bead {
   const roll = Math.random();
-  // mostly tiny seed beads, a few pearls and slightly bigger beads
-  const kind: Kind = roll < 0.55 ? "seed" : roll < 0.8 ? "round" : "pearl";
+  // mostly tiny seed beads, a few pearls and slightly bigger beads, plus the odd little star
+  const kind: Kind = roll < 0.48 ? "seed" : roll < 0.7 ? "round" : roll < 0.85 ? "pearl" : "star";
   const sizes = small
-    ? { seed: [4, 7], round: [7, 11], pearl: [8, 12] }
-    : { seed: [5, 8], round: [9, 14], pearl: [10, 15] };
+    ? { seed: [4, 7], round: [7, 11], pearl: [8, 12], star: [6, 9] }
+    : { seed: [5, 8], round: [9, 14], pearl: [10, 15], star: [8, 12] };
   const [lo, hi] = sizes[kind];
   return {
     x, y,
@@ -46,6 +46,32 @@ function drawBead(ctx: CanvasRenderingContext2D, b: Bead) {
   ctx.shadowColor = "rgba(110, 60, 110, 0.18)";
   ctx.shadowBlur = r * 0.7;
   ctx.shadowOffsetY = r * 0.3;
+
+  if (b.kind === "star") {
+    // a soft, rounded little star that twinkles very slightly
+    const tw = 1 + 0.08 * Math.sin(b.rot * 2.2);
+    ctx.scale(tw, tw);
+    ctx.shadowColor = "rgba(150, 110, 60, 0.2)";
+    ctx.shadowBlur = r * 0.6;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 === 0 ? r : r * 0.48;
+      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+      ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    ctx.closePath();
+    const sg = ctx.createLinearGradient(-r, -r, r, r);
+    sg.addColorStop(0, "hsl(48 90% 90%)");
+    sg.addColorStop(1, "hsl(40 80% 72%)");
+    ctx.fillStyle = sg;
+    ctx.strokeStyle = "hsl(42 80% 78%)";
+    ctx.lineWidth = r * 0.22;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
 
   const pearl = b.kind === "pearl";
   const hue = pearl ? 300 : b.hue;

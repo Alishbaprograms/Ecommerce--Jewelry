@@ -112,41 +112,6 @@
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.12);
   }
 
-  @keyframes bead-hop {
-    0% { transform: translateY(0) rotate(0deg); }
-    30% { transform: translateY(-11px) rotate(-5deg); }
-    60% { transform: translateY(3px) rotate(3deg); }
-    100% { transform: translateY(0) rotate(0deg); }
-  }
-
-  @keyframes bead-swing {
-    0% { transform: rotate(0deg); }
-    18% { transform: rotate(-3.2deg); }
-    40% { transform: rotate(2.4deg); }
-    62% { transform: rotate(-1.4deg); }
-    82% { transform: rotate(0.7deg); }
-    100% { transform: rotate(0deg); }
-  }
-
-  @keyframes bead-spark {
-    0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 1; }
-    70% { opacity: 1; }
-    100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg); opacity: 0; }
-  }
-
-  @keyframes bead-sway {
-    0%, 100% { transform: rotate(-0.8deg); }
-    50% { transform: rotate(0.8deg); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [style*="bead-sway"], [style*="bead-swing"], [style*="bead-hop"], [style*="bead-spark"] { animation: none !important; }
-  }
-
-  .float-slow {
-    animation: floaty 6s ease-in-out infinite;
-  }
-
   .animate-shimmer {
     background: linear-gradient(
       90deg,
@@ -157,11 +122,6 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
-}
-
-@keyframes floaty {
-  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
-  50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
 }
 
 @keyframes shimmer {
