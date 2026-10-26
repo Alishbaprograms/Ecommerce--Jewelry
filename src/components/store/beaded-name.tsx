@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 // ZOHRAÉ spelled in glossy beads on a string. Everything is computed from a few numbers (no images),
 // so it stays sharp on every screen. Letter beads follow the curve of the string.
@@ -163,7 +165,15 @@ function Defs({ id }: { id: string }) {
   );
 }
 
-function Row({ path, letters, scale, edge, offset, id }: { path: ReturnType<typeof curve>; letters: string[]; scale: number; edge: boolean; offset: number; id: string }) {
+type Pulse = { key: number; layout: string; index: number } | null;
+type Burst = { id: number; layout: string; x: number; y: number };
+
+function Row({
+  path, letters, scale, edge, offset, id, pulse, onTap,
+}: {
+  path: ReturnType<typeof curve>; letters: string[]; scale: number; edge: boolean; offset: number; id: string;
+  pulse: Pulse; onTap: (layout: string, index: number, bead: Bead, at: P) => void;
+}) {
   const beads = arrange(path, letters, scale, edge, offset);
   const placed: Array<{ b: Bead; p: ReturnType<ReturnType<typeof curve>["at"]> }> = [];
   let s = 0;
@@ -171,15 +181,74 @@ function Row({ path, letters, scale, edge, offset, id }: { path: ReturnType<type
     placed.push({ b, p: path.at(s + b.w / 2) });
     s += b.w;
   }
+
+  // A tap anywhere along the string finds the nearest bead, so tiny seed beads are easy to hit on a phone.
+  function handlePointerDown(e: React.PointerEvent<SVGGElement>) {
+    const svg = e.currentTarget.ownerSVGElement;
+    const ctm = e.currentTarget.getScreenCTM();
+    if (!svg || !ctm) return;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const local = pt.matrixTransform(ctm.inverse());
+    let best = 0, bestD = Infinity;
+    placed.forEach(({ p }, i) => {
+      const d = Math.hypot(p.x - local.x, p.y - local.y);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    onTap(id, best, placed[best].b, placed[best].p);
+  }
+
+  const active = pulse && pulse.layout === id ? pulse : null;
+
   return (
     <g filter={`url(#${id}-shadow)`}>
       <path d={path.d} stroke="#fff7ec" strokeWidth="3" fill="none" />
-      {placed.map(({ b, p }, i) => (
-        <g key={i} transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(b.kind === "cube" || b.kind === "heart" || b.kind === "smiley" ? p.angle : 0).toFixed(1)})`}>
-          <BeadShape b={b} id={id} />
+      <g key={active ? active.key : 0}>
+        {placed.map(({ b, p }, i) => {
+          const rotates = b.kind === "cube" || b.kind === "heart" || b.kind === "smiley";
+          const hop = active ? { animation: `bead-hop 560ms ease-out ${Math.min(700, Math.abs(i - active.index) * 24)}ms 1 both` } : undefined;
+          return (
+            <g key={i} transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(rotates ? p.angle : 0).toFixed(1)})`}>
+              <g style={hop}>
+                <BeadShape b={b} id={id} />
+              </g>
+            </g>
+          );
+        })}
+      </g>
+      {/* invisible, wide touch target along the whole string */}
+      <path d={path.d} stroke="transparent" strokeWidth="90" fill="none" style={{ cursor: "pointer", touchAction: "manipulation" }} onPointerDown={handlePointerDown} />
+    </g>
+  );
+}
+
+const SPARK_COLOURS = ["#ffd23f", "#ff7eb6", "#6fe3b2", "#b79cff", "#6cc6ff"];
+
+function Sparkles({ bursts }: { bursts: Burst[] }) {
+  return (
+    <>
+      {bursts.map((b) => (
+        <g key={b.id} transform={`translate(${b.x.toFixed(1)} ${b.y.toFixed(1)})`} pointerEvents="none">
+          {Array.from({ length: 9 }).map((_, i) => {
+            const a = (i / 9) * Math.PI * 2 + (b.id % 3) * 0.3;
+            const dist = 64 + (i % 3) * 20;
+            return (
+              <path
+                key={i}
+                d="M0 -15 L4.4 -4.4 15 0 4.4 4.4 0 15 -4.4 4.4 -15 0 -4.4 -4.4Z"
+                fill={SPARK_COLOURS[i % SPARK_COLOURS.length]}
+                style={{
+                  ["--dx" as string]: `${(Math.cos(a) * dist).toFixed(0)}px`,
+                  ["--dy" as string]: `${(Math.sin(a) * dist).toFixed(0)}px`,
+                  animation: `bead-spark 720ms ease-out ${i * 12}ms 1 both`,
+                }}
+              />
+            );
+          })}
         </g>
       ))}
-    </g>
+    </>
   );
 }
 
@@ -190,20 +259,54 @@ export function BeadedName({ className }: { className?: string }) {
   const small = curve({ x: -50, y: 62 }, { x: 300, y: 150 }, { x: 650, y: 62 });
   const letters = ["Z", "O", "H", "R", "A", "É"];
 
+  const [pulse, setPulse] = useState<Pulse>(null);
+  const [swing, setSwing] = useState(0);
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const counter = useRef(0);
+
+  const onTap = useCallback((layout: string, index: number, bead: Bead, at: P) => {
+    counter.current += 1;
+    const n = counter.current;
+    setPulse({ key: n, layout, index });
+    setSwing(n);
+    try {
+      navigator.vibrate?.(8); // a tiny "click" on phones that support it
+    } catch {}
+    if (bead.kind === "cube") {
+      setBursts((b) => [...b, { id: n, layout, x: at.x, y: at.y }]);
+      setTimeout(() => setBursts((b) => b.filter((x) => x.id !== n)), 900);
+    }
+  }, []);
+
+  // One gentle nudge shortly after the page opens, so people notice the string can be touched.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(() => setSwing(-1), 2600);
+    return () => clearTimeout(t);
+  }, []);
+
+  const swingStyle = swing !== 0 ? { animation: "bead-swing 1000ms ease-out 1", transformOrigin: "50% 0%", transformBox: "fill-box" as const } : undefined;
+
   return (
-    <div className={className} role="img" aria-label="ZOHRAÉ spelled out in colourful beads">
+    <div className={className}>
       {/* wide screens: one long string */}
-      <svg viewBox="0 0 1200 250" className="hidden sm:block w-full h-auto overflow-visible" aria-hidden="true">
+      <svg viewBox="0 0 1200 250" className="hidden sm:block w-full h-auto overflow-visible" role="img" aria-label="ZOHRAÉ spelled out in colourful beads. Tap the beads to play.">
         <Defs id="bw" />
         <g style={sway}>
-          <Row path={wide} letters={letters} scale={1} edge offset={0} id="bw" />
+          <g key={swing} style={swingStyle}>
+            <Row path={wide} letters={letters} scale={1} edge offset={0} id="bw" pulse={pulse} onTap={onTap} />
+            <Sparkles bursts={bursts.filter((b) => b.layout === "bw")} />
+          </g>
         </g>
       </svg>
       {/* phones: the whole name on one string, with bigger beads so the letters stay easy to read */}
-      <svg viewBox="0 0 600 150" className="sm:hidden w-full h-auto overflow-visible" aria-hidden="true">
+      <svg viewBox="0 0 600 150" className="sm:hidden w-full h-auto overflow-visible" role="img" aria-label="ZOHRAÉ spelled out in colourful beads. Tap the beads to play.">
         <Defs id="bm" />
         <g style={sway}>
-          <Row path={small} letters={letters} scale={1.2} edge={false} offset={0} id="bm" />
+          <g key={swing} style={swingStyle}>
+            <Row path={small} letters={letters} scale={1.2} edge={false} offset={0} id="bm" pulse={pulse} onTap={onTap} />
+            <Sparkles bursts={bursts.filter((b) => b.layout === "bm")} />
+          </g>
         </g>
       </svg>
     </div>

@@ -39,6 +39,17 @@ export function BraceletLauncher() {
     return () => timers.forEach(clearTimeout);
   }, [reduceMotion]);
 
+  // Other parts of the page (like the homepage banner) can open the designer with this event.
+  useEffect(() => {
+    const open = () => {
+      track("bracelet_open", { hint: false, from: "banner" });
+      setShowHint(false);
+      setOpen(true);
+    };
+    window.addEventListener("open-bracelet-designer", open);
+    return () => window.removeEventListener("open-bracelet-designer", open);
+  }, []);
+
   if (HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
 
   return (

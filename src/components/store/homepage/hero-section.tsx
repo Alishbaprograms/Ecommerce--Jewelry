@@ -35,6 +35,13 @@ export function HeroSection() {
           <Button asChild size="lg">
             <Link href="/collections">Shop all jewelry</Link>
           </Button>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("open-bracelet-designer"))}
+            className="mt-4 block w-full text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Design your own bracelet →
+          </button>
         </motion.div>
       </div>
     </section>
