@@ -83,7 +83,9 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         body.append("file", file);
         const res = await fetch("/api/admin/upload", { method: "POST", body });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error ?? "Upload failed");
+        if (!res.ok) {
+          throw new Error(data.error ?? (res.status === 413 ? "That photo is too big. Try a smaller one." : `Upload failed (error ${res.status})`));
+        }
         setImages((prev) => [...prev, data.url]);
       }
     } catch (e) {

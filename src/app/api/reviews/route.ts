@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { KID_AGES, REVIEW_TAGS } from "@/lib/review-config";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { cloudinaryEnv } from "@/lib/cloudinary";
 
 const schema = z.object({
   productId: z.string().min(1),
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "You've sent a few reviews already. Please try again later." }, { status: 429 });
     }
 
-    const cloud = process.env.CLOUDINARY_CLOUD_NAME;
+    const cloud = cloudinaryEnv.cloudName;
     if (data.images.some((u) => !cloud || !u.startsWith(`https://res.cloudinary.com/${cloud}/`))) {
       return NextResponse.json({ error: "That photo can't be used." }, { status: 400 });
     }

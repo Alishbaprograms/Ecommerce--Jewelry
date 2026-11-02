@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { cloudinary } from "@/lib/cloudinary";
+import { cloudinary, cloudinaryMessage, cloudinaryReady } from "@/lib/cloudinary";
 
 export async function POST(request: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  if (!cloudinaryReady) {
     return NextResponse.json({ error: "Image storage (Cloudinary) is not configured on the server." }, { status: 500 });
   }
 
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error("[POST /api/admin/upload]", error);
-    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
+    // Only the signed-in admin sees this, so showing Cloudinary's own reason (e.g. "Invalid cloud_name") is safe and helpful.
+    return NextResponse.json({ error: `Cloudinary said: ${cloudinaryMessage(error)}` }, { status: 500 });
   }
 }

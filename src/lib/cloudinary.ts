@@ -1,10 +1,30 @@
 import { v2 as cloudinary } from "cloudinary";
 
+// Values pasted into Vercel often carry a stray space, new line or pair of quote marks. Clean them so a
+// harmless copy-paste slip doesn't make every upload fail.
+function clean(value: string | undefined) {
+  return (value ?? "").trim().replace(/^["']+|["']+$/g, "").trim();
+}
+
+export const cloudinaryEnv = {
+  cloudName: clean(process.env.CLOUDINARY_CLOUD_NAME),
+  apiKey: clean(process.env.CLOUDINARY_API_KEY),
+  apiSecret: clean(process.env.CLOUDINARY_API_SECRET),
+};
+
+export const cloudinaryReady = Boolean(cloudinaryEnv.cloudName && cloudinaryEnv.apiKey && cloudinaryEnv.apiSecret);
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: cloudinaryEnv.cloudName,
+  api_key: cloudinaryEnv.apiKey,
+  api_secret: cloudinaryEnv.apiSecret,
 });
+
+/** Cloudinary reports errors as plain objects, not Error instances; pull out the readable message. */
+export function cloudinaryMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) return String((error as { message: unknown }).message);
+  return "Unknown error";
+}
 
 export { cloudinary };
 

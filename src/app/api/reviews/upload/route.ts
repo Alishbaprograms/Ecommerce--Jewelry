@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cloudinary } from "@/lib/cloudinary";
+import { cloudinary, cloudinaryReady } from "@/lib/cloudinary";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if (!rateLimit(`review-upload:${clientIp(request.headers)}`, 6, 60 * 60_000)) {
     return NextResponse.json({ error: "Too many photos. Please try again later." }, { status: 429 });
   }
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  if (!cloudinaryReady) {
     return NextResponse.json({ error: "Photo upload isn't available right now." }, { status: 503 });
   }
 
