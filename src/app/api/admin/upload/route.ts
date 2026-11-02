@@ -12,11 +12,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const url = await saveImage(Buffer.from(await file.arrayBuffer()), "product");
+    const url = await saveImage(Buffer.from(await file.arrayBuffer()), "product", file.type);
     return NextResponse.json({ url });
   } catch (error) {
     if (error instanceof ImageError) return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("[POST /api/admin/upload]", error);
-    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
+    // Only the signed-in admin sees this, so the real reason is shown to make problems easy to report.
+    const reason = error instanceof Error ? error.message : "unknown error";
+    return NextResponse.json({ error: `Upload failed: ${reason}` }, { status: 500 });
   }
 }

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   if (file.size > MAX_BYTES) return NextResponse.json({ error: "That photo is too big (max 4 MB)." }, { status: 400 });
 
   try {
-    const url = await saveImage(Buffer.from(await file.arrayBuffer()), "review");
+    const url = await saveImage(Buffer.from(await file.arrayBuffer()), "review", file.type);
     return NextResponse.json({ url });
   } catch (error) {
     if (error instanceof ImageError) return NextResponse.json({ error: error.message }, { status: 400 });
