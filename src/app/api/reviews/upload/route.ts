@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cloudinary, cloudinaryReady } from "@/lib/cloudinary";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { ImageError, saveImage } from "@/lib/image-store";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
@@ -8,9 +8,6 @@ const MAX_BYTES = 4 * 1024 * 1024;
 export async function POST(request: NextRequest) {
   if (!rateLimit(`review-upload:${clientIp(request.headers)}`, 6, 60 * 60_000)) {
     return NextResponse.json({ error: "Too many photos. Please try again later." }, { status: 429 });
-  }
-  if (!cloudinaryReady) {
-    return NextResponse.json({ error: "Photo upload isn't available right now." }, { status: 503 });
   }
 
   const form = await request.formData().catch(() => null);
@@ -21,16 +18,10 @@ export async function POST(request: NextRequest) {
   if (file.size > MAX_BYTES) return NextResponse.json({ error: "That photo is too big (max 4 MB)." }, { status: 400 });
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream({ folder: "zohrae/reviews", resource_type: "image" }, (err, res) =>
-          err || !res ? reject(err ?? new Error("Upload failed")) : resolve(res)
-        )
-        .end(buffer);
-    });
-    return NextResponse.json({ url: result.secure_url });
+    const url = await saveImage(Buffer.from(await file.arrayBuffer()), "review");
+    return NextResponse.json({ url });
   } catch (error) {
+    if (error instanceof ImageError) return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("[POST /api/reviews/upload]", error);
     return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
   }

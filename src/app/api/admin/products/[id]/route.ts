@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 import { z } from "zod";
 import { productInputSchema, newSku } from "@/lib/product-schema";
+import { removeUnusedImages } from "@/lib/image-store";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,6 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { productId: id, deletedAt: null },
       select: { id: true },
     });
+    const oldImages = (await db.productImage.findMany({ where: { productId: id }, select: { url: true } })).map((i) => i.url);
     const keepIds = new Set(data.variants.map((v) => v.id).filter(Boolean) as string[]);
 
     await db.$transaction([
@@ -87,6 +89,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             })
       ),
     ]);
+    // Photos the owner removed from this product are deleted from storage (unless something else still uses them).
+    await removeUnusedImages(oldImages.filter((u) => !data.images.some((i) => i.url === u)));
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {

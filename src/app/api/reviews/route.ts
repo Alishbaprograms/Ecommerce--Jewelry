@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { KID_AGES, REVIEW_TAGS } from "@/lib/review-config";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { cloudinaryEnv } from "@/lib/cloudinary";
+import { isOwnImage } from "@/lib/image-store";
 
 const schema = z.object({
   productId: z.string().min(1),
@@ -15,7 +15,7 @@ const schema = z.object({
   kidAge: z.enum(KID_AGES).optional(),
   tags: z.array(z.enum(REVIEW_TAGS)).max(6).default([]),
   orderNumber: z.string().trim().max(40).optional(),
-  images: z.array(z.string().url()).max(2).default([]),
+  images: z.array(z.string()).max(2).default([]),
   website: z.string().optional(), // honeypot: real people never fill this in
 });
 
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "You've sent a few reviews already. Please try again later." }, { status: 429 });
     }
 
-    const cloud = cloudinaryEnv.cloudName;
-    if (data.images.some((u) => !cloud || !u.startsWith(`https://res.cloudinary.com/${cloud}/`))) {
-      return NextResponse.json({ error: "That photo can't be used." }, { status: 400 });
+    // Only photos uploaded through our own review uploader may be attached.
+    for (const url of data.images) {
+      if (!(await isOwnImage(url, "review"))) return NextResponse.json({ error: "That photo can't be used." }, { status: 400 });
     }
 
     const product = await db.product.findFirst({ where: { id: data.productId, status: "ACTIVE", deletedAt: null }, select: { id: true } });

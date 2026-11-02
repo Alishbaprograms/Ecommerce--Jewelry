@@ -12,7 +12,16 @@ export const productInputSchema = z.object({
   isFeatured: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
   isBestSeller: z.boolean().default(false),
-  images: z.array(z.object({ url: z.string().url() })).default([]),
+  images: z
+    .array(
+      z.object({
+        url: z
+          .string()
+          .max(500)
+          .refine((u) => /^https:\/\//.test(u) || /^\/api\/img\/[a-z0-9]+$/.test(u), "Invalid photo"),
+      })
+    )
+    .default([]),
   variants: z
     .array(
       z.object({

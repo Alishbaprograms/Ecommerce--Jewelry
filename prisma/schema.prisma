@@ -912,3 +912,17 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@index([sessionId])
 }
+
+// ─── Uploaded images ──────────────────────────────────────────────────────────
+// Product and review photos are stored here (already resized and compressed) and served from /api/img/<id>.
+// To move to another storage service later (e.g. Supabase), only src/lib/image-store.ts needs to change.
+model StoredImage {
+  id          String   @id @default(cuid())
+  kind        String   // "product" | "review"
+  contentType String
+  size        Int
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([kind])
+}
