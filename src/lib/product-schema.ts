@@ -4,6 +4,7 @@ export const productInputSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional().nullable(),
   shortDescription: z.string().optional().nullable(),
+  careInstructions: z.string().max(1000).optional().nullable(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE"),
   categoryId: z.string().optional().nullable(),
   basePrice: z.number().positive("Price must be more than 0"),

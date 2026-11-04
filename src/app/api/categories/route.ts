@@ -5,7 +5,7 @@ export async function GET() {
   const categories = await db.category.findMany({
     where: { isActive: true, deletedAt: null },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true, image: true },
+    select: { id: true, name: true, slug: true, image: true, description: true },
   });
   return NextResponse.json({ categories });
 }

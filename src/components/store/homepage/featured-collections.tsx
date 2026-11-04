@@ -4,19 +4,44 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { track } from "@/lib/track";
 
-const categories: { name: string; slug: string; emoji: string; image?: string; note: string; bg: string }[] = [
-  { name: "Magnetic Earrings", slug: "magnetic-earrings", emoji: "🧲", image: "/categories/magnetic-earrings-clean4.jpg", note: "Clip-on, no piercing", bg: "bg-blush" },
-  { name: "Bead Bracelets", slug: "bead-bracelets", emoji: "🌈", note: "Colourful & stretchy", bg: "bg-butter" },
-  { name: "Bead Necklaces", slug: "bead-necklaces", emoji: "🌸", note: "Sweet little strands", bg: "bg-lilac" },
-  { name: "Hair Clips", slug: "hair-accessories", emoji: "🎀", note: "Clips, bows & bands", bg: "bg-mint" },
-  { name: "Rings", slug: "rings", emoji: "💍", note: "Tiny adjustable rings", bg: "bg-sky" },
-];
+type ApiCategory = { id: string; name: string; slug: string; image: string | null; description: string | null };
+
+const TILE_COLORS = ["bg-blush", "bg-butter", "bg-lilac", "bg-mint", "bg-sky"];
+
+// Friendly extras for the usual categories. Anything the owner adds in admin still gets a tile.
+const KNOWN: Record<string, { emoji: string; image?: string; note: string }> = {
+  "magnetic-earrings": { emoji: "🧲", image: "/categories/magnetic-earrings-clean4.jpg", note: "Clip-on, no piercing" },
+  "bead-bracelets": { emoji: "🌈", note: "Colourful & stretchy" },
+  "bead-necklaces": { emoji: "🌸", note: "Sweet little strands" },
+  "hair-accessories": { emoji: "🎀", note: "Clips, bows & bands" },
+  rings: { emoji: "💍", note: "Tiny adjustable rings" },
+};
 
 export function FeaturedCollections() {
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
+  const { data } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => (await fetch("/api/categories")).json() as Promise<{ categories: ApiCategory[] }>,
+    staleTime: 60_000,
+  });
+  const categories = (data?.categories ?? []).map((c, i) => {
+    const known = KNOWN[c.slug];
+    return {
+      name: c.name,
+      slug: c.slug,
+      // A photo set in admin wins over the built-in one.
+      image: c.image ?? known?.image,
+      emoji: known?.emoji ?? "✨",
+      note: c.description || known?.note || "",
+      bg: TILE_COLORS[i % TILE_COLORS.length],
+    };
+  });
+
+  if (data && categories.length === 0) return null;
 
   return (
     <section ref={ref} className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto">
@@ -37,7 +62,7 @@ export function FeaturedCollections() {
             initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: i * 0.08 }}
-            className={i === categories.length - 1 ? "col-span-2 sm:col-span-1 h-full" : "h-full"}
+            className={i === categories.length - 1 && categories.length % 2 === 1 ? "col-span-2 sm:col-span-1 h-full" : "h-full"}
           >
             <Link
               href={`/collections/${c.slug}`}
@@ -52,6 +77,7 @@ export function FeaturedCollections() {
                   <Image
                     src={c.image}
                     alt={c.name}
+                    unoptimized={c.image.startsWith("/api/img/")}
                     width={800}
                     height={600}
                     sizes="(max-width: 640px) 45vw, 240px"
@@ -64,7 +90,7 @@ export function FeaturedCollections() {
                 )}
               </span>
               <h3 className="text-base sm:text-lg font-semibold">{c.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{c.note}</p>
+              {c.note && <p className="text-xs text-muted-foreground mt-1">{c.note}</p>}
             </Link>
           </motion.div>
         ))}

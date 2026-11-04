@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
         slug,
         description: data.description || null,
         shortDescription: data.shortDescription || null,
+        careInstructions: data.careInstructions?.trim() || null,
         status: data.status,
         categoryId: data.categoryId || null,
         basePrice: data.basePrice,

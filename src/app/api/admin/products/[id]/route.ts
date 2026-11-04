@@ -46,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           name: data.name,
           description: data.description || null,
           shortDescription: data.shortDescription || null,
+          careInstructions: data.careInstructions?.trim() || null,
           status: data.status,
           categoryId: data.categoryId || null,
           basePrice: data.basePrice,

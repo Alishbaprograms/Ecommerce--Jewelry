@@ -15,6 +15,7 @@ export interface ProductFormProduct {
   name: string;
   shortDescription?: string | null;
   description?: string | null;
+  careInstructions?: string | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   categoryId?: string | null;
   basePrice: string;
@@ -45,6 +46,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
 
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
+  const [careInstructions, setCareInstructions] = useState(product?.careInstructions ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
   const [price, setPrice] = useState(product?.basePrice ? String(Number(product.basePrice)) : "");
   const [comparePrice, setComparePrice] = useState(
@@ -120,6 +122,7 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         body: JSON.stringify({
           name: name.trim(),
           description,
+          careInstructions,
           categoryId: categoryId || null,
           basePrice,
           compareAtPrice: comparePrice ? Number(comparePrice) : null,
@@ -204,6 +207,9 @@ export function ProductForm({ product, onSuccess }: { product?: ProductFormProdu
         </Field>
         <Field label="Description">
           <textarea value={description ?? ""} onChange={(e) => setDescription(e.target.value)} rows={5} className={inputCls} placeholder="Tell parents what it is, materials, size, safety notes..." />
+        </Field>
+        <Field label="Care instructions" hint="Shown on the product page under “Care”. Leave empty to show our standard care tips.">
+          <textarea value={careInstructions} onChange={(e) => setCareInstructions(e.target.value)} rows={3} className={inputCls} placeholder="e.g. Keep dry, wipe with a soft cloth, remove before swimming or sleeping." />
         </Field>
         <Field label="Category">
           <select value={categoryId ?? ""} onChange={(e) => setCategoryId(e.target.value)} className={inputCls}>
